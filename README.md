@@ -22,3 +22,6 @@ withdraw from your group. Please chose wisely!
 # Maven
 - Maven is a build automation and project management tool primarily used for Java projects to manage dependencies and streamline the build process.
 - Maven manages project dependencies, compiles source code, and runs tests with minimal configuration.
+
+# Maven Installation:
+- Please watch this youtube vide for installing maven: https://www.youtube.com/watch?v=km3tLti4TCM&ab_channel=AmitThinks
