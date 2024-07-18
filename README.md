@@ -19,3 +19,4 @@ OBJECTIVE
 
 # Maven
 Maven is a build automation and project management tool primarily used for Java projects to manage dependencies and streamline the build process.
+Maven manages project dependencies, compiles source code, and runs tests with minimal configuration.
