@@ -25,3 +25,11 @@ withdraw from your group. Please chose wisely!
 
 # Maven Installation:
 - Please watch this youtube vide for installing maven: https://www.youtube.com/watch?v=km3tLti4TCM&ab_channel=AmitThinks
+
+# Goals
+1. Explore NoSQL/Graph Database (Neo4j)
+2. To create REST API endpoints that are supported by Neo4j graph databases
+3. Practice Software Architecture, in particular Server/Client model
+4. Learn how to extend functionality of a software project by adding new features.
+5. Practice a build system such as maven
+
