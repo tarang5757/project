@@ -16,3 +16,6 @@ OBJECTIVE
 3. Practice Software Architecture, in particular Server/Client model
 4. Learn how to extend functionality of a software project by adding new features.
 5. Practice a build system such as maven.
+
+# Maven
+Maven is a build automation and project management tool primarily used for Java projects to manage dependencies and streamline the build process.
