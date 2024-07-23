@@ -1,6 +1,6 @@
 ### TESTING YOUR CODE
 
-#CLI
+# CLI
 From the command line the best way to test your endpoints is using curl.
 ```
 curl -X POST http://localhost:PORT/routeNameHere/ --data \
