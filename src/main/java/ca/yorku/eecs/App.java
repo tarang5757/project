@@ -15,6 +15,9 @@ public class App {
 
         Neo4j database = new Neo4j(username, password);
 
+        // register addActor handler
+        server.createContext("/addActor", new addActor(database));
+
         server.start();
         System.out.printf("Server started on port %d...\n", PORT);
     }
