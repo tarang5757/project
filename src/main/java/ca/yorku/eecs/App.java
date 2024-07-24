@@ -17,7 +17,9 @@ public class App {
 
         // register addActor handler
         server.createContext("/addActor", new addActor(database));
-
+        server.createContext("/api/v1/addMovie", new addMovie(database));
+        server.createContext("/api/v1/getMovie", new getMovie(database));
+        
         server.start();
         System.out.printf("Server started on port %d...\n", PORT);
     }
