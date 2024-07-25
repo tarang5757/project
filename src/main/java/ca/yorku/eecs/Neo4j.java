@@ -1,16 +1,9 @@
 package ca.yorku.eecs;
 
-import org.neo4j.driver.v1.*;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashSet;
-
+import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
-
-import org.neo4j.driver.v1.net.ServerAddress;
-import org.neo4j.driver.*;
+import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.v1.*;
 
 public class Neo4j {
     private String uriDb;
@@ -22,7 +15,6 @@ public class Neo4j {
         uriDb = "bolt://localhost:7687";
         config = Config.builder().withoutEncryption().build();
         driver = GraphDatabase.driver(uriDb, AuthTokens.basic(username, password), config);
-        System.out.println("Connection with database was successfull");
     }
 
     public void close() {

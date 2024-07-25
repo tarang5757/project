@@ -1,18 +1,20 @@
 package ca.yorku.eecs;
 
+import static org.neo4j.driver.v1.Values.parameters;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
 import org.json.*;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Session;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import static org.neo4j.driver.v1.Values.parameters;
+import org.neo4j.driver.v1.*;
 
 public class addActor implements HttpHandler {
     private final Driver driver;
 
+    // this constructor initializes database
     public addActor(Neo4j database) {
         this.driver = database.getDriver();
     }
@@ -26,58 +28,71 @@ public class addActor implements HttpHandler {
             }
         } catch (IOException e) {
             e.printStackTrace();
+
         }
     }
 
-    @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public void handle(HttpExchange exchange) {
         try {
-            if ("PUT".equalsIgnoreCase(exchange.getRequestMethod())) {
-                handlePut(exchange);
+            if ("PUT".equals(exchange.getRequestMethod())) {
+                handlePutRequest(exchange);
             } else {
                 sendResponse(exchange, 405, "Method Not Allowed");
             }
+        }
+
+        catch (IOException e) {
+            sendResponse(exchange, 500, "Internal Server Error");
+        }
+
+        catch (Exception e) {
+            sendResponse(exchange, 500, "Internal Server Error");
+
+        }
+
+    }
+
+    private void handlePutRequest(HttpExchange exchange) throws IOException {
+        try {
+            String body = Utils.convert(exchange.getRequestBody());
+            JSONObject deserialized = new JSONObject(body);
+
+            String name = "";
+            String actorId = "";
+
+            if (deserialized.has("name") && deserialized.has("actorID")) {
+                name = deserialized.getString("name");
+                actorId = deserialized.getString("actorID");
+
+                addActorToDatabase(name, actorId);
+
+                JSONObject responseJSON = new JSONObject();
+                responseJSON.put("name", name);
+                responseJSON.put("ActorID", actorId);
+
+                sendResponse(exchange, 200, responseJSON.toString());
+            } else {
+                sendResponse(exchange, 400, "Bad Request: Missing name or actorID");
+            }
+        } catch (JSONException e) {
+            sendResponse(exchange, 400, "Bad Request: Invalid JSON");
         } catch (Exception e) {
-            e.printStackTrace();
             sendResponse(exchange, 500, "Internal Server Error");
         }
     }
 
-    /*
-     * Status Codes:
-     * 200: Actor was successfully added
-     * 400: Actor ID already exists in database, or request body is improperly
-     * formatted or missing information
-     * 500: Server Error
-     */
-    private void handlePut(HttpExchange exchange) throws IOException, JSONException {
-        String body = Utils.convert(exchange.getRequestBody());
-        JSONObject deserialized = new JSONObject(body);
-        int statusCode = 0;
-
-        if (deserialized.has("actorId") && deserialized.has("name")) {
-            String name = deserialized.getString("name");
-            String actorId = deserialized.getString("actorId");
-
-            try (Session session = driver.session()) {
-                session.writeTransaction(tx -> {
-                    boolean actorExists = tx.run("MATCH (a:Actor {id:$x}) RETURN a", parameters("x", actorId))
-                            .hasNext();
-                    if (actorExists) {
-                        sendResponse(exchange, 400, "Actor ID already exists");
-                    } else {
-                        tx.run("CREATE (a:Actor {id:$x, name:$y})", parameters("x", actorId, "y", name));
-                        sendResponse(exchange, 200, "Actor was successfully added");
-                    }
-                    return null;
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                sendResponse(exchange, 500, "Internal Server Error");
-            }
-        } else {
-            statusCode = 400;
-            sendResponse(exchange, statusCode, "Bad Request: Missing actorID or name");
+    private void addActorToDatabase(String name, String id) {
+        try (Session session = driver.session()) {
+            session.writeTransaction(tx -> {
+                String query = "MERGE (a:Actor {actorID: $actorID}) "
+                        + "ON CREATE SET a.name = $name "
+                        + "ON MATCH SET a.name = $name"; // Updates the name if the actorID already exists
+                tx.run(query, parameters("actorID", id, "name", name));
+                return null;
+            });
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the error for debugging purposes
         }
     }
+
 }
