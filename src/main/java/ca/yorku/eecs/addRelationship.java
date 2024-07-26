@@ -21,6 +21,7 @@ public class addRelationship implements HttpHandler {
     private void sendResponse(HttpExchange exchange, int statusCode, String response) {
         try {
             byte[] bytes = response.getBytes();
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
             exchange.sendResponseHeaders(statusCode, bytes.length);
             try(OutputStream os = exchange.getResponseBody()) {
                 os.write(bytes);
