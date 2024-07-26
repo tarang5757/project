@@ -50,7 +50,7 @@ public class getMovie implements HttpHandler{
 	 * 404: No movie with given movieId exists in database
 	 * 500: Server Error
 	 */
-	public void handleGet(HttpExchange r) throws IOException, JSONException {
+	private void handleGet(HttpExchange r) throws IOException, JSONException {
 		String response = null;
 		String body = Utils.convert(r.getRequestBody());
 		JSONObject deserialized = new JSONObject(body);
