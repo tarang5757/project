@@ -30,11 +30,12 @@ public class getCoActors implements HttpHandler{
 		this.driver = database.getDriver();
 	}
 	
-	private void sendResponse(HttpExchange exchange, int statusCode, String response) {
+	private void sendResponse(HttpExchange r, int statusCode, String response) {
         try {
             byte[] bytes = response.getBytes();
-            exchange.sendResponseHeaders(statusCode, bytes.length);
-            try (OutputStream os = exchange.getResponseBody()) {
+            r.getResponseHeaders().set("Content-Type", "application/json");
+            r.sendResponseHeaders(statusCode, bytes.length);
+            try (OutputStream os = r.getResponseBody()) {
                 os.write(bytes);
             }
         } catch(IOException e) {
@@ -101,11 +102,10 @@ public class getCoActors implements HttpHandler{
 				sendResponse(r, 200, response);
 				
 				tx.success();
-				tx.close();
 			} else { //No Actor found with given actorId
 				sendResponse(r, 404, "No Actor found with given ID");
 			}
-				
+			tx.close();	
 		} catch (JSONException e) {
 			sendResponse(r, 400, "BAD REQUEST");
 			e.printStackTrace();
