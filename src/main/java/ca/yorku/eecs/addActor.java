@@ -34,7 +34,7 @@ public class addActor implements HttpHandler {
 
     public void handle(HttpExchange exchange) {
         try {
-            if ("PUT".equals(exchange.getRequestMethod())) {
+            if (exchange.getRequestMethod().equals("PUT")) {
                 handlePutRequest(exchange);
             } else {
                 sendResponse(exchange, 405, "Method Not Allowed");
@@ -60,15 +60,15 @@ public class addActor implements HttpHandler {
             String name = "";
             String actorId = "";
 
-            if (deserialized.has("name") && deserialized.has("actorID")) {
+            if (deserialized.has("name") && deserialized.has("actorId")) {
                 name = deserialized.getString("name");
-                actorId = deserialized.getString("actorID");
+                actorId = deserialized.getString("actorId");
 
                 addActorToDatabase(name, actorId);
 
                 JSONObject responseJSON = new JSONObject();
                 responseJSON.put("name", name);
-                responseJSON.put("ActorID", actorId);
+                responseJSON.put("ActorId", actorId);
 
                 sendResponse(exchange, 200, responseJSON.toString());
             } else {
@@ -84,10 +84,10 @@ public class addActor implements HttpHandler {
     private void addActorToDatabase(String name, String id) {
         try (Session session = driver.session()) {
             session.writeTransaction(tx -> {
-                String query = "MERGE (a:Actor {actorID: $actorID}) "
+                String query = "MERGE (a:Actor {actorID: $actorId}) "
                         + "ON CREATE SET a.name = $name "
                         + "ON MATCH SET a.name = $name"; // Updates the name if the actorID already exists
-                tx.run(query, parameters("actorID", id, "name", name));
+                tx.run(query, parameters("actorId", id, "name", name));
                 return null;
             });
         } catch (Exception e) {

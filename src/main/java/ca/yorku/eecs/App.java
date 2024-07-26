@@ -16,7 +16,8 @@ public class App {
         Neo4j database = new Neo4j(username, password);
 
         // register addActor handler
-        server.createContext("/addActor", new addActor(database));
+        server.createContext("/api/v1/addActor", new addActor(database));
+        server.createContext("/api/v1/getActor", new getActor(database));
         server.createContext("/api/v1/addMovie", new addMovie(database));
         server.createContext("/api/v1/getMovie", new getMovie(database));
         server.createContext("/api/v1/addRelationship", new addRelationship(database));
