@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpServer;
 
 public class App {
     static int PORT = 8080;
+    private static Neo4j database;
 
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", PORT), 0);
@@ -13,7 +14,7 @@ public class App {
         String username = "neo4j";
         String password = "12345678";
 
-        Neo4j database = new Neo4j(username, password);
+        database = new Neo4j(username, password);
 
         // register addActor handler
         server.createContext("/api/v1/addActor", new addActor(database));
@@ -24,5 +25,9 @@ public class App {
         server.createContext("/api/v1/getCoActors", new getCoActors(database));
         server.start();
         System.out.printf("Server started on port %d...\n", PORT);
+    }
+    
+    public static Neo4j getDatabase() {
+    	return database;
     }
 }
