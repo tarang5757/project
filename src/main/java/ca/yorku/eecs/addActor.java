@@ -72,7 +72,7 @@ public class addActor implements HttpHandler {
 
                 sendResponse(exchange, 200, responseJSON.toString());
             } else {
-                sendResponse(exchange, 400, "Bad Request: Missing name or actorID");
+                sendResponse(exchange, 400, "Bad Request: Missing name or actorId");
             }
         } catch (JSONException e) {
             sendResponse(exchange, 400, "Bad Request: Invalid JSON");
@@ -84,7 +84,7 @@ public class addActor implements HttpHandler {
     private void addActorToDatabase(String name, String id) {
         try (Session session = driver.session()) {
             session.writeTransaction(tx -> {
-                String query = "MERGE (a:Actor {actorID: $actorId}) "
+                String query = "MERGE (a:Actor {actorId: $actorId}) "
                         + "ON CREATE SET a.name = $name "
                         + "ON MATCH SET a.name = $name"; // Updates the name if the actorID already exists
                 tx.run(query, parameters("actorId", id, "name", name));

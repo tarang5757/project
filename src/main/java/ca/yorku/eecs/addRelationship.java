@@ -11,13 +11,13 @@ import com.sun.net.httpserver.HttpHandler;
 import static org.neo4j.driver.v1.Values.parameters;
 
 public class addRelationship implements HttpHandler {
-	
-	private final Driver driver;
-	
-	public addRelationship(Neo4j database) {
-		this.driver = database.getDriver();
-	}
-	
+
+    private final Driver driver;
+
+    public addRelationship(Neo4j database) {
+        this.driver = database.getDriver();
+    }
+
     private void sendResponse(HttpExchange exchange, int statusCode, String response) {
         try {
             byte[] bytes = response.getBytes();
@@ -29,7 +29,7 @@ public class addRelationship implements HttpHandler {
             e.printStackTrace();
         }
     }
-	
+
     @Override
     public void handle(HttpExchange exchange) {
         try {
@@ -44,7 +44,7 @@ public class addRelationship implements HttpHandler {
             sendResponse(exchange, 500, "INTERNAL SERVER ERROR");
         }
     }
-	
+
     private void handlePutRequest(HttpExchange exchange) throws IOException {
         try {
             String body = Utils.convert(exchange.getRequestBody());
@@ -75,25 +75,25 @@ public class addRelationship implements HttpHandler {
             sendResponse(exchange, 500, "INTERNAL SERVER ERROR");
         }
     }
-	
+
     private int addActedInRelationship(String actorId, String movieId) {
         try (Session session = driver.session()) {
             return session.writeTransaction(tx -> {
-                StatementResult actorResult = tx.run("MATCH (a:Actor {actorID:$actorId}) RETURN a", parameters("actorId", actorId));
+                StatementResult actorResult = tx.run("MATCH (a:Actor {actorId:$actorId}) RETURN a", parameters("actorId", actorId));
                 StatementResult movieResult = tx.run("MATCH (m:Movie {movieId:$movieId}) RETURN m", parameters("movieId", movieId));
 
                 if (!actorResult.hasNext() || !movieResult.hasNext()) {
                     return 1;
                 }
                 StatementResult relationshipResult = tx.run(
-                    "MATCH (a:Actor {actorID:$actorId})-[r:ACTED_IN]->(m:Movie {movieId:$movieId}) RETURN r",
-                    parameters("actorId", actorId, "movieId", movieId)
+                        "MATCH (a:Actor {actorId:$actorId})-[r:ACTED_IN]->(m:Movie {movieId:$movieId}) RETURN r",
+                        parameters("actorId", actorId, "movieId", movieId)
                 );
                 if (relationshipResult.hasNext()) {
                     return 2;
                 }
-                tx.run("MATCH (a:Actor {actorID:$actorId}), (m:Movie {movieId:$movieId}) " +
-                        "MERGE (a)-[:ACTED_IN]->(m)",
+                tx.run("MATCH (a:Actor {actorId:$actorId}), (m:Movie {movieId:$movieId}) " +
+                                "MERGE (a)-[:ACTED_IN]->(m)",
                         parameters("actorId", actorId, "movieId", movieId));
                 return 0;
             });
