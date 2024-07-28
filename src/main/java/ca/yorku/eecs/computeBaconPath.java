@@ -107,18 +107,29 @@ public class computeBaconPath implements HttpHandler {
         }
     }
 
-    private static Map<String, Object> getPath(Transaction tx, String actorId) {
-        StatementResult result = tx.run(
-                "MATCH p=shortestPath((a:Actor {actorId: $actorId})-[*]-(b:Actor {actorId: $baconId})) " +
-                        "RETURN length(p)/2 as baconNumber, p as baconPath",
-                parameters("actorId", actorId, "baconId", "nm0000102")
-        );
-        List<Record> records = result.list();
-        Map<String, Object> recordMap = new HashMap<>();
-        if (!records.isEmpty()) {
-            Record record = records.get(0);
-            recordMap = record.asMap();
+    /**
+     * Retrieves the shortest path between the given actor and Kevin Bacon in the Neo4j database.
+     *
+     * @param tx the transaction within which the query is run
+     * @param actorId the ID of the actor for whom the path to Kevin Bacon is to be found
+     * @return a map containing the length of the path divided by 2 (as baconNumber) and the path itself (as baconPath)
+     */
+        private static Map<String, Object> getPath(Transaction tx, String actorId) {
+            // Execute a query to find the shortest path between the given actor and Kevin Bacon
+            StatementResult result = tx.run(
+                    "MATCH p=shortestPath((a:Actor {actorId: $actorId})-[*]-(b:Actor {actorId: $baconId})) " +
+                            "RETURN length(p)/2 as baconNumber, p as baconPath",
+                    parameters("actorId", actorId, "baconId", "nm0000102")
+            );
+
+            // Get the list of records returned by the query
+            List<Record> records = result.list();
+            // Initialize a map to hold the results
+            Map<String, Object> recordMap = new HashMap<>();
+            if (!records.isEmpty()) {
+                Record record = records.get(0);
+                recordMap = record.asMap();
+            }
+            return recordMap;
         }
-        return recordMap;
     }
-}
