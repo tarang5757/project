@@ -87,11 +87,11 @@ extends TestCase {
 			URL url = new URL(urlStr);
 			HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 			connection.setRequestMethod(method);
+			connection.setDoOutput(true);
 			connection.setRequestProperty("Content-Type", "application/json");
 
 			//Write Request Body into connection
 			if(requestBody != null) {
-				connection.setDoOutput(true);
 				try(OutputStream out = connection.getOutputStream()){
 					out.write(requestBody.toString().getBytes("UTF-8"));
 					out.close();
@@ -154,31 +154,22 @@ extends TestCase {
 		getRequest.put("movieId", "1234");
 
 		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", putRequest);   //Add movie to database
-		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie", getRequest);		//Get movie that was added
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie?movieId=1234", null);		//Get movie that was added
 		assertEquals(200, statusCode);
 	}
 
 	//Returns a 400 code for improper request method/body. Returns a 404 code for movieId not found
 	public void getMovieFail() throws JSONException {
 		//TEST 1: Wrong Method Type (400)
-		JSONObject wrongMethodRequest = new JSONObject();
-		wrongMethodRequest.put("movieId", "1234");
-
-		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/getMovie", wrongMethodRequest); //Wrong method but movie exists in DB
+		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/getMovie?movieId=1234", null); 
 		assertEquals(400, statusCode);
 
 		//TEST 2: Improper Formatting (Missing/Misspelled information) (400)
-		JSONObject improperFormatRequest = new JSONObject();
-		improperFormatRequest.put("movieId", "1234"); //Wrong field name but movie exists in DB
-
-		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie", improperFormatRequest);
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie?movieasdasId=1234", null);
 		assertEquals(400, statusCode);
 		
 		//TEST 3: Movie Does not exist (404)
-		JSONObject missingRequest = new JSONObject();
-		missingRequest.put("movieId", "123456");  //No such movie in DB
-
-		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie", missingRequest);
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie?movieId=123456", null);
 		assertEquals(404, statusCode);
 		
 		resetDatabase();
