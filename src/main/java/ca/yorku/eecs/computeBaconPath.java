@@ -22,6 +22,7 @@ import static org.neo4j.driver.v1.Values.parameters;
 
 public class computeBaconPath implements HttpHandler {
     private final Driver driver;
+    private final String baconId = "nm0000102";
 
     public computeBaconPath(Neo4j database) {
         this.driver = database.getDriver();
@@ -81,11 +82,17 @@ public class computeBaconPath implements HttpHandler {
                     StatementResult checkBacon = tx.run("MATCH (m:Actor {actorId:'nm0000102'}) RETURN m");
 
                     if (result.hasNext() && checkBacon.hasNext()) {
+                        ArrayList<String> baconPath = new ArrayList<>();
+                        if(actorId.equals(baconId)){
+                            baconPath.add(baconId);
+                            jsonResponse.put("baconPath", baconPath);
+                            sendResponse(r, 200, jsonResponse.toString());
+                            return;
+                        }
                         // Get the shortest path using the getBaconPath method
                         Map<String, Object> baconPathResult = getPath(tx, actorId);
                         if (!baconPathResult.isEmpty()) {
                             Path path = (Path) baconPathResult.get("baconPath");
-                            List<String> baconPath = new ArrayList<>();
                             for (Node node : path.nodes()) {
                                 if (node.containsKey("actorId")) {
                                     baconPath.add(node.get("actorId").asString());
@@ -118,7 +125,7 @@ public class computeBaconPath implements HttpHandler {
             // Execute a query to find the shortest path between the given actor and Kevin Bacon
             StatementResult result = tx.run(
                     "MATCH p=shortestPath((a:Actor {actorId: $actorId})-[*]-(b:Actor {actorId: $baconId})) " +
-                            "RETURN length(p)/2 as baconNumber, p as baconPath",
+                            "RETURN p AS baconPath",
                     parameters("actorId", actorId, "baconId", "nm0000102")
             );
 

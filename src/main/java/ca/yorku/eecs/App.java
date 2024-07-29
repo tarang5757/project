@@ -24,6 +24,7 @@ public class App {
         server.createContext("/api/v1/getCoActors", new getCoActors(database));
         server.createContext("/api/v1/getActor", new getCoActors(database));
         server.createContext("/api/v1/computeBaconPath", new computeBaconPath(database));
+        server.createContext("/api/v1/computeBaconNumber", new computeBaconNumber(database));
         server.start();
         System.out.printf("Server started on port %d...\n", PORT);
     }
