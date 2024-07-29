@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,14 +19,15 @@ public class Utils {
     
     public static Map<String, String> parseQuery(String query) {
         Map<String, String> queryPairs = new HashMap<>();
-        String[] pairs = query.split("&");
-        for (String pair : pairs) {
-            int idx = pair.indexOf("=");
+        //Split parameters into pairs
+        String[] params = query.split("&");
+        for (String param : params) {
+            int idx = param.indexOf("=");
             try {
-                queryPairs.put(
-                    URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8.name()), 
-                    URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8.name())
-                );
+            	//Use URL decoder to decode the parameter's special characters.
+                String key = URLDecoder.decode(param.substring(0, idx), "UTF-8");
+                String value = URLDecoder.decode(param.substring(idx + 1), "UTF-8");
+            	queryPairs.put(key, value);
             } catch (Exception e) {
                 e.printStackTrace();
             }
