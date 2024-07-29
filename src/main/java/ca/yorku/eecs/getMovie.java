@@ -1,12 +1,15 @@
 package ca.yorku.eecs;
 
 import java.util.List;
+import java.util.Map;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.lang.Long;
+import java.net.URI;
+
 import org.json.*;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
@@ -28,19 +31,19 @@ public class getMovie implements HttpHandler{
 	public getMovie(Neo4j database) {
 		this.driver = database.getDriver();
 	}
-	
+
 	private void sendResponse(HttpExchange r, int statusCode, String response) {
-        try {
-            byte[] bytes = response.getBytes();
-            r.getResponseHeaders().set("Content-Type", "application/json");
-            r.sendResponseHeaders(statusCode, bytes.length);
-            try (OutputStream os = r.getResponseBody()) {
-                os.write(bytes);
-            }
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
-    }
+		try {
+			byte[] bytes = response.getBytes();
+			r.getResponseHeaders().set("Content-Type", "application/json");
+			r.sendResponseHeaders(statusCode, bytes.length);
+			try (OutputStream os = r.getResponseBody()) {
+				os.write(bytes);
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	public void handle(HttpExchange r) throws IOException {
@@ -65,19 +68,34 @@ public class getMovie implements HttpHandler{
 	 */
 	private void handleGet(HttpExchange r) {
 		try {
-		String response = null;
-		String body = Utils.convert(r.getRequestBody());
-		JSONObject deserialized = new JSONObject(body);
-		String movieId = "";
+			String movieId = null;
+			String response = null;
+			String body = Utils.convert(r.getRequestBody());
+			//Can accept query parameters sent in URL or request body. Request body will take precedence.
+			if(!body.isEmpty()) {
+				//Request Body
+				JSONObject deserialized = new JSONObject(body);
+				if (deserialized.has("movieId"))
+					movieId = deserialized.getString("movieId");
+				else {
+					sendResponse(r, 400, "Request body improperly formatted or missing information"); 
+					return;
+				}
+			}
+			else {
+				//Query Parameters 
+				URI uri = r.getRequestURI();
+				String query = uri.getQuery();
+				Map<String, String> queryParams = Utils.parseQuery(query);
+				movieId = queryParams.get("movieId");
 
-		if (deserialized.has("movieId")) {
-			movieId = deserialized.getString("movieId");
-		} else {
-			sendResponse(r, 400, "Request body improperly formatted or missing information");
-			return;
-		}
+				if (movieId == null || movieId.isEmpty()) {
+					sendResponse(r, 400, "Request body improperly formatted or missing information");
+					return;
+				}
+			}
 
-		Session session = this.driver.session();
+			Session session = this.driver.session();
 			Transaction tx = session.beginTransaction();
 			StatementResult result = tx.run("MATCH (m:Movie {movieId:$x}) RETURN m", parameters("x", movieId));
 			if(result.hasNext()) {
@@ -110,9 +128,8 @@ public class getMovie implements HttpHandler{
 				sendResponse(r, 404, "No Movie found with given ID");
 			}
 			tx.close();
-		} catch (JSONException e) {
+		} catch(JSONException e) {
 			sendResponse(r, 400, "BAD REQUEST");
-			e.printStackTrace();
 		} catch (Exception e) {
 			sendResponse(r, 500, "INTERNAL SERVER ERROR");
 		}

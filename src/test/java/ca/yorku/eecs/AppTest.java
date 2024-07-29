@@ -22,7 +22,7 @@ import junit.framework.TestSuite;
 public class AppTest
 extends TestCase {
 	Neo4j database;
-	
+
 	/**
 	 * Create the test case
 	 *
@@ -40,6 +40,8 @@ extends TestCase {
 		suite.addTest(new AppTest("setup"));	//Start connection and initialize driver
 		suite.addTest(new AppTest("addMovieSuccess"));
 		suite.addTest(new AppTest("addMovieFail"));
+		suite.addTest(new AppTest("getMovieSuccess"));
+		suite.addTest(new AppTest("getMovieFail"));
 		return suite;
 		//return new TestSuite(AppTest.class);
 	}
@@ -50,7 +52,7 @@ extends TestCase {
 	public void testApp() {
 		assertTrue(true);
 	}
-	
+
 	/**
 	 * Starts the connection, initializes driver, and deletes all nodes currently in the
 	 * database to prepare for tests.
@@ -64,7 +66,7 @@ extends TestCase {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void resetDatabase() {
 		database = App.getDatabase();
 		try (Session session = database.getDriver().session()){
@@ -72,7 +74,7 @@ extends TestCase {
 			session.close();
 		}
 	}
-	
+
 
 	/**
 	 * @param method: request type (ie. PUT, GET, ...)
@@ -102,44 +104,76 @@ extends TestCase {
 			return -1;
 		}
 	}
-	
+
 	//Returns a 200 OK code for a successful add
 	public void addMovieSuccess() throws JSONException {
 		JSONObject request = new JSONObject();
 		request.put("name", "Goodfellas");
 		request.put("movieId", "15000");
-		
+
 		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", request);
 		assertEquals(200, statusCode);
 	}
-	
+
 	//Returns a 400 code for improper request method/body, or pre-existing movie
 	public void addMovieFail() throws JSONException{
 		//TEST 1: Wrong Method Type
 		JSONObject wrongMethodRequest = new JSONObject();
 		wrongMethodRequest.put("name", "Despicable Me");
 		wrongMethodRequest.put("movieId", "16000");
-		
+
 		int statusCode = sendRequest("GET", "http://localhost:8080/api/v1/addMovie", wrongMethodRequest);
 		assertEquals(400, statusCode);
-		
+
 		//TEST 2: Improper Formatting (Missing/Misspelled information)
 		JSONObject improperFormatRequest = new JSONObject();
 		improperFormatRequest.put("movieName", "Elf");  //Wrong field name
 		improperFormatRequest.put("movieId", "17000");
-		
+
 		statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", improperFormatRequest);
 		assertEquals(400, statusCode);
-		
+
 		//TEST 3: Movie Already Exists
 		JSONObject repeatRequest = new JSONObject();
 		repeatRequest.put("name", "Goodfellas");
 		repeatRequest.put("movieId", "15000");
-		
+
 		//Movie was already added in addMovieSuccess
 		statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", repeatRequest);
 		assertEquals(400, statusCode);
+
+		resetDatabase();
+	}
+
+	//Returns a 200 code for successfully adding a Movie to the database
+	public void getMovieSuccess() throws JSONException {
+		JSONObject putRequest = new JSONObject();
+		JSONObject getRequest = new JSONObject();
+		putRequest.put("name", "Click");
+		putRequest.put("movieId", "1234");
+		getRequest.put("movieId", "1234");
+
+		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", putRequest);   //Add movie to database
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie?movieId=1234", null);		//Get movie that was added
+		assertEquals(200, statusCode);
+	}
+
+	//Returns a 400 code for improper request method/body. Returns a 404 code for movieId not found
+	public void getMovieFail() throws JSONException {
+		//TEST 1: Wrong Method Type (400)
+		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/getMovie?movieId=1234", null); 
+		assertEquals(400, statusCode);
+
+		//TEST 2: Improper Formatting (Missing/Misspelled information) (400)
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie?movieasdasId=1234", null);
+		assertEquals(400, statusCode);
+		
+		//TEST 3: Movie Does not exist (404)
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie?movieId=123456", null);
+		assertEquals(404, statusCode);
 		
 		resetDatabase();
 	}
+	
+	
 }
