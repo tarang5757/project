@@ -89,7 +89,7 @@ public class computeBaconPath implements HttpHandler {
                             sendResponse(r, 200, jsonResponse.toString());
                             return;
                         }
-                        // Get the shortest path using the getBaconPath method
+                        // Get the shortest path using the getPath method
                         Map<String, Object> baconPathResult = getPath(tx, actorId);
                         if (!baconPathResult.isEmpty()) {
                             Path path = (Path) baconPathResult.get("baconPath");
