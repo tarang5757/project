@@ -44,6 +44,8 @@ extends TestCase {
 		suite.addTest(new AppTest("getMovieFail"));
 		suite.addTest(new AppTest("addActorPass"));
 		suite.addTest(new AppTest("addActorFail"));
+		suite.addTest(new AppTest("getCoActorsPass"));
+		suite.addTest(new AppTest("getCoActorsFail"));
 
 		return suite;
 		//return new TestSuite(AppTest.class);
@@ -126,7 +128,7 @@ extends TestCase {
 		wrongMethodRequest.put("movieId", "16000");
 
 		int statusCode = sendRequest("GET", "http://localhost:8080/api/v1/addMovie", wrongMethodRequest);
-		assertEquals(400, statusCode);
+		assertEquals(405, statusCode);
 
 		//TEST 2: Improper Formatting (Missing/Misspelled information)
 		JSONObject improperFormatRequest = new JSONObject();
@@ -163,9 +165,9 @@ extends TestCase {
 
 	//Returns a 400 code for improper request method/body. Returns a 404 code for movieId not found
 	public void getMovieFail() throws JSONException {
-		//TEST 1: Wrong Method Type (400)
+		//TEST 1: Wrong Method Type (405)
 		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/getMovie?movieId=1234", null); 
-		assertEquals(400, statusCode);
+		assertEquals(405, statusCode);
 
 		//TEST 2: Improper Formatting (Missing/Misspelled information) (400)
 		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie?movieasdasId=1234", null);
@@ -215,6 +217,7 @@ extends TestCase {
 		assertEquals(400, statuscode2);
 		System.out.println("Movie already exists. status code: " + statuscode2);
 
+		resetDatabase();
 	}
 
 	public void getActorPass() throws JSONException {
@@ -225,5 +228,54 @@ extends TestCase {
 		
 	}
 	
+	public void getCoActorsPass() throws JSONException {
+		//Populate DB for getCoActors tests
+		JSONObject actorOneRequest = new JSONObject();
+		JSONObject actorTwoRequest = new JSONObject();
+		JSONObject movieRequest = new JSONObject();
+		JSONObject relationshipOne = new JSONObject();
+		JSONObject relationshipTwo = new JSONObject();
+		JSONObject getCoactorsRequest = new JSONObject();
+		actorOneRequest.put("name", "Adam Sandler");  //Request to add Adam Sandler to DB
+		actorOneRequest.put("actorId", "1111");
+		
+		actorTwoRequest.put("name", "Kevin James");    //Request to add Kevin James to DB
+		actorTwoRequest.put("actorId", "2222");
+		
+		movieRequest.put("name", "Grown Ups");    //Request to add Grown Ups to DB
+		movieRequest.put("movieId", "3333");
+		
+		relationshipOne.put("movieId", "3333");   //Request to add Adam-[ACTED_IN]->Grown Ups
+		relationshipOne.put("actorId", "1111");
+		relationshipTwo.put("movieId", "3333");   //Request to add Kevin-[ACTED_IN]->Grown Ups
+		relationshipTwo.put("actorId", "2222");
+		
+		getCoactorsRequest.put("actorId", "1111"); //Request for Adam Sandler's co-actors
+
+		int dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", actorOneRequest);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", actorTwoRequest);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", movieRequest);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipOne);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipTwo);
+		
+		int statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getCoActors?actorId=1111", null);
+		assertEquals(200, statusCode);
+	}
+	
+	public void getCoActorsFail() throws JSONException {
+		//TEST 1: Wrong Method Type (PUT instead of GET) (405)
+		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/getCoActors?actorId=1111", null); 
+		assertEquals(405, statusCode);
+
+		//TEST 2: Improper Formatting (actorID instead of actorId) (400)
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getCoActors?actorID=1111", null);
+		assertEquals(400, statusCode);
+
+		//TEST 3: Movie Does not exist (404)
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getCoActors?actorId=123456", null);
+		assertEquals(404, statusCode);
+
+		resetDatabase();
+	}
 	
 }

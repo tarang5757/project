@@ -51,7 +51,7 @@ public class getMovie implements HttpHandler{
 			if (r.getRequestMethod().equals("GET")) {
 				handleGet(r);
 			}else{
-				sendResponse(r, 400, "Method not allowed");
+				sendResponse(r, 405, "Method not allowed");
 			}
 		} catch (Exception e) {
 			sendResponse(r, 500, "INTERNAL SERVER ERROR");

@@ -38,7 +38,7 @@ public class addMovie implements HttpHandler{
             if (r.getRequestMethod().equals("PUT")) {
                 handlePut(r);
             } else {
-                sendResponse(r, 400, "Method Not Allowed");
+                sendResponse(r, 405, "Method Not Allowed");
             }
         } catch (Exception e) {
             sendResponse(r, 500, "Internal Server Error");

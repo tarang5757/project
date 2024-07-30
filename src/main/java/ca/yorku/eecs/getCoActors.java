@@ -1,6 +1,7 @@
 package ca.yorku.eecs;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.neo4j.driver.v1.Values.parameters;
 
@@ -10,6 +11,8 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.lang.Long;
+import java.net.URI;
+
 import org.json.*;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
@@ -49,7 +52,7 @@ public class getCoActors implements HttpHandler{
 			if (r.getRequestMethod().equals("GET")) {
 				handleGet(r);
 			}else{
-				sendResponse(r, 400, "Method not allowed");
+				sendResponse(r, 405, "Method not allowed");
 			}
 		} catch (Exception e) {
 			sendResponse(r, 500, "INTERNAL SERVER ERROR");
@@ -66,16 +69,31 @@ public class getCoActors implements HttpHandler{
 	 */
 	private void handleGet(HttpExchange r) {
 		try {
+			String actorId = null;
 			String response = null;
 			String body = Utils.convert(r.getRequestBody());
-			JSONObject deserialized = new JSONObject(body);
-			String actorId = "";
-			
-			if(deserialized.has("actorId")) {
-				actorId = deserialized.getString("actorId");
-			} else {
-				sendResponse(r, 400, "Request body improperly formatted or missing information");
-				return;
+			//Can accept query parameters sent in URL or request body. Request body will take precedence.
+			if(!body.isEmpty()) {
+				//Request Body
+				JSONObject deserialized = new JSONObject(body);
+				if (deserialized.has("actorId"))
+					actorId = deserialized.getString("actorId");
+				else {
+					sendResponse(r, 400, "Request body improperly formatted or missing information"); 
+					return;
+				}
+			}
+			else {
+				//Query Parameters 
+				URI uri = r.getRequestURI();
+				String query = uri.getQuery();
+				Map<String, String> queryParams = Utils.parseQuery(query);
+				actorId = queryParams.get("actorId");
+
+				if (actorId == null || actorId.isEmpty()) {
+					sendResponse(r, 400, "Request body improperly formatted or missing information");
+					return;
+				}
 			}
 			
 			//Make query and populate list of coActors
