@@ -38,10 +38,13 @@ extends TestCase {
 	public static Test suite() {
 		TestSuite suite = new TestSuite();
 		suite.addTest(new AppTest("setup"));	//Start connection and initialize driver
-		suite.addTest(new AppTest("addMovieSuccess"));
+		suite.addTest(new AppTest("addMoviePass"));
 		suite.addTest(new AppTest("addMovieFail"));
-		suite.addTest(new AppTest("getMovieSuccess"));
+		suite.addTest(new AppTest("getMoviePass"));
 		suite.addTest(new AppTest("getMovieFail"));
+		suite.addTest(new AppTest("addActorPass"));
+		suite.addTest(new AppTest("addActorFail"));
+
 		return suite;
 		//return new TestSuite(AppTest.class);
 	}
@@ -106,7 +109,7 @@ extends TestCase {
 	}
 
 	//Returns a 200 OK code for a successful add
-	public void addMovieSuccess() throws JSONException {
+	public void addMoviePass() throws JSONException {
 		JSONObject request = new JSONObject();
 		request.put("name", "Goodfellas");
 		request.put("movieId", "15000");
@@ -146,7 +149,7 @@ extends TestCase {
 	}
 
 	//Returns a 200 code for successfully adding a Movie to the database
-	public void getMovieSuccess() throws JSONException {
+	public void getMoviePass() throws JSONException {
 		JSONObject putRequest = new JSONObject();
 		JSONObject getRequest = new JSONObject();
 		putRequest.put("name", "Click");
@@ -173,6 +176,53 @@ extends TestCase {
 		assertEquals(404, statusCode);
 		
 		resetDatabase();
+	}
+
+	public void addActorPass() throws JSONException {
+		JSONObject request = new JSONObject();
+		request.put("name", "Robert Downey JR");
+		request.put("actorId", "777");
+
+		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", request);
+		assertEquals(200, statusCode);
+
+
+	}
+
+	public void addActorFail() throws JSONException {
+		//First Test case Wrong method type
+		JSONObject wrongRequestType = new JSONObject();
+		wrongRequestType.put("name", "test1");
+		wrongRequestType.put("actorId", "234");
+		int statuscode = sendRequest("GET", "http://localhost:8080/api/v1/addActor", wrongRequestType);
+		assertEquals(405, statuscode);
+		System.out.println("here is staus code for addActorFail: " + statuscode);
+
+
+		//improper format (Missing or misspelled information)
+		JSONObject incorrectFormatRequest = new JSONObject();
+		incorrectFormatRequest.put("name", "incorrectformatRequest");
+		incorrectFormatRequest.put("actorID", "000"); //actorID instead of actorId
+		int statuscode1 = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", incorrectFormatRequest);
+		System.out.println("Missing information or misspelled information. status code: " + statuscode1);
+		assertEquals(400, statuscode1);
+
+		//movie exists
+		JSONObject movieExistsRequest = new JSONObject();
+		movieExistsRequest.put("name", "Robert Downey JR");
+		movieExistsRequest.put("actorId", "777");
+		int statuscode2 = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", movieExistsRequest);
+		assertEquals(400, statuscode2);
+		System.out.println("Movie already exists. status code: " + statuscode2);
+
+	}
+
+	public void getActorPass() throws JSONException {
+
+	}
+
+	public void getActorFail() throws JSONException {
+		
 	}
 	
 	

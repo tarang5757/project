@@ -39,17 +39,12 @@ public class addActor implements HttpHandler {
             } else {
                 sendResponse(exchange, 405, "Method Not Allowed");
             }
-        }
-
-        catch (IOException e) {
+        } catch (IOException e) {
             sendResponse(exchange, 500, "Internal Server Error");
-        }
-
-        catch (Exception e) {
+        } catch (Exception e) {
             sendResponse(exchange, 500, "Internal Server Error");
 
         }
-
     }
 
     private void handlePutRequest(HttpExchange exchange) throws IOException {
@@ -57,20 +52,25 @@ public class addActor implements HttpHandler {
             String body = Utils.convert(exchange.getRequestBody());
             JSONObject deserialized = new JSONObject(body);
 
-            String name = "";
-            String actorId = "";
-
             if (deserialized.has("name") && deserialized.has("actorId")) {
-                name = deserialized.getString("name");
-                actorId = deserialized.getString("actorId");
+                String name = deserialized.getString("name");
+                String actorId = deserialized.getString("actorId");
 
-                addActorToDatabase(name, actorId);
-
-                JSONObject responseJSON = new JSONObject();
-                responseJSON.put("name", name);
-                responseJSON.put("ActorId", actorId);
-
-                sendResponse(exchange, 200, responseJSON.toString());
+                try (Session session = driver.session()) {
+                    session.writeTransaction(tx -> {
+                        boolean actorExists = tx.run("MATCH (a:Actor {actorId: $actorId}) RETURN a", parameters("actorId", actorId)).hasNext();
+                        if (actorExists) {
+                            sendResponse(exchange, 400, "Actor ID already exists");
+                        } else {
+                            tx.run("CREATE (a:Actor {actorId: $actorId, name: $name})", parameters("actorId", actorId, "name", name));
+                            sendResponse(exchange, 200, "Actor was successfully added");
+                        }
+                        return null;
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    sendResponse(exchange, 500, "Internal Server Error");
+                }
             } else {
                 sendResponse(exchange, 400, "Bad Request: Missing name or actorId");
             }
@@ -80,19 +80,4 @@ public class addActor implements HttpHandler {
             sendResponse(exchange, 500, "Internal Server Error");
         }
     }
-
-    private void addActorToDatabase(String name, String id) {
-        try (Session session = driver.session()) {
-            session.writeTransaction(tx -> {
-                String query = "MERGE (a:Actor {actorId: $actorId}) "
-                        + "ON CREATE SET a.name = $name "
-                        + "ON MATCH SET a.name = $name"; // Updates the name if the actorID already exists
-                tx.run(query, parameters("actorId", id, "name", name));
-                return null;
-            });
-        } catch (Exception e) {
-            e.printStackTrace(); // Log the error for debugging purposes
-        }
-    }
-
 }
