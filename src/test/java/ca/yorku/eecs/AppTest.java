@@ -46,6 +46,10 @@ extends TestCase {
 		suite.addTest(new AppTest("addActorFail"));
 		suite.addTest(new AppTest("getCoActorsPass"));
 		suite.addTest(new AppTest("getCoActorsFail"));
+		//suite.addTest(new AppTest("addRatingPass"));
+		//suite.addTest(new AppTest("addRatingFail"));
+		suite.addTest(new AppTest("getRatingPass"));
+		suite.addTest(new AppTest("getRatingFail"));
 		suite.addTest(new AppTest("computeBaconPathPass"));
 		suite.addTest(new AppTest("computeBaconPathFail"));
 
@@ -157,10 +161,8 @@ extends TestCase {
 	//Returns a 200 code for successfully adding a Movie to the database
 	public void getMoviePass() throws JSONException {
 		JSONObject putRequest = new JSONObject();
-		JSONObject getRequest = new JSONObject();
 		putRequest.put("name", "Click");
 		putRequest.put("movieId", "1234");
-		getRequest.put("movieId", "1234");
 
 		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", putRequest);   //Add movie to database
 		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie?movieId=1234", null);		//Get movie that was added
@@ -279,6 +281,51 @@ extends TestCase {
 		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getCoActors?actorId=123456", null);
 		assertEquals(404, statusCode);
 
+		resetDatabase();
+	}
+	
+	public void addRatingPass() {
+		
+	}
+	
+	public void addRatingFail() {
+		
+	}
+	
+	//Returns a 200 code for successful rating retrieval
+	public void getRatingPass() throws JSONException {
+		JSONObject request = new JSONObject();
+		JSONObject ratingRequest = new JSONObject();
+		request.put("name", "Goodfellas");
+		request.put("movieId", "101");
+		ratingRequest.put("movieId", "101");
+		ratingRequest.put("rating", "10");
+
+		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", request);
+		statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRating", ratingRequest);
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getRating?movieId=101", null);
+		assertEquals(200, statusCode);
+	}
+	
+	//Returns a 400 code for improper request method/body, or 404 for non-existent movie/rating
+	public void getRatingFail() throws JSONException {
+		// Add movie to DB with no rating. (movie 101 added above has a rating)
+		JSONObject request = new JSONObject();
+		request.put("name","Taxi Driver");
+		request.put("movieId", "102");
+		
+		//TEST 1: Wrong Method Type (PUT instead of GET) (405)
+		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/getRating?movieId=101", null); 
+		assertEquals(405, statusCode);
+		
+		//TEST 2: Improper Formatting (mooovieId instead of movieId) (400)
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getRating?mooovieId=101", null); 
+		assertEquals(400, statusCode);
+		
+		//TEST 3: Movie does not exist or rating does not exist (404)
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getRaaaaating?movieId=1033", null); 
+		assertEquals(404, statusCode);
+		
 		resetDatabase();
 	}
 
