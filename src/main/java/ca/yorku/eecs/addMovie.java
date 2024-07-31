@@ -53,14 +53,19 @@ public class addMovie implements HttpHandler{
 	 * 500: Server Error
 	 */
 	public void handlePut(HttpExchange r) throws IOException, JSONException {
+		// Take parameters from request body
 		String body = Utils.convert(r.getRequestBody());
 		JSONObject deserialized = new JSONObject(body);
 		int statusCode = 0;
 		
+		/* Check that necessary parameters were given
+		 * Does NOT accept URL query parameters unlike GET requests
+		 */
 		if (deserialized.has("movieId") && deserialized.has("name")) {
             String name = deserialized.getString("name");
             String movieId = deserialized.getString("movieId");
 
+            // Start session and run query to check if movieId already exists. If not, Create movie with given parameters
             try (Session session = driver.session()) {
                 session.writeTransaction(tx -> {
                     boolean movieExists = tx.run("MATCH (m:Movie {movieId:$x}) RETURN m", parameters("x", movieId)).hasNext();

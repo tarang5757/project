@@ -100,11 +100,13 @@ public class getCoActors implements HttpHandler{
 			Session session = this.driver.session();
 			Transaction tx = session.beginTransaction();
 			StatementResult result = tx.run("MATCH (a:Actor {actorId:$x}) RETURN a", parameters("x", actorId));
+			//Check that there exists an actor with given Id
 			if(result.hasNext()) {
 				Record record = result.next();
 				Node actorNode = record.get("a").asNode();
 				
 				List<String> actors = new ArrayList<>();
+				// Run query for any actor who has an ACTED_IN relationship with given actor's movies
 				StatementResult coStarsResult = tx.run("MATCH(a:Actor {actorId:$x})-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(coActor:Actor) "
 													+ "RETURN coActor.actorId", parameters("x", actorId));
 				while(coStarsResult.hasNext()) {
