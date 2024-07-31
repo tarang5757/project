@@ -1,15 +1,11 @@
 package ca.yorku.eecs;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 import org.json.*;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Config;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
+
 import org.neo4j.driver.v1.Session;
 
 import junit.framework.Test;
@@ -43,17 +39,10 @@ extends TestCase {
 		suite.addTest(new AppTest("getMoviePass"));
 		suite.addTest(new AppTest("getMovieFail"));
 		suite.addTest(new AppTest("addActorPass"));
-		suite.addTest(new AppTest("addActorFail"));
+		suite.addTest(new AppTest("getActorPass"));
+		suite.addTest(new AppTest("getActorFail"));
 		suite.addTest(new AppTest("getCoActorsPass"));
 		suite.addTest(new AppTest("getCoActorsFail"));
-		//suite.addTest(new AppTest("addRatingPass"));
-		//suite.addTest(new AppTest("addRatingFail"));
-		suite.addTest(new AppTest("getRatingPass"));
-		suite.addTest(new AppTest("getRatingFail"));
-		suite.addTest(new AppTest("computeBaconPathPass"));
-		suite.addTest(new AppTest("computeBaconPathFail"));
-
-
 
 		return suite;
 		//return new TestSuite(AppTest.class);
@@ -227,10 +216,36 @@ extends TestCase {
 	}
 
 	public void getActorPass() throws JSONException {
+		JSONObject putRequest = new JSONObject();
+		JSONObject getRequest = new JSONObject();
+		putRequest.put("name", "Click");
+		putRequest.put("actorId", "1234");
+		getRequest.put("actorId", "1234");
+
+		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", putRequest);   //Add movie to database
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getActor?actorId=1234", null);		//Get movie that was added
+		System.out.println("getActorPass status code: " + statusCode);
+		assertEquals(200, statusCode);
+
 
 	}
 
 	public void getActorFail() throws JSONException {
+		//TEST 1: Wrong Method Type (PUT instead of GET) (405)
+		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/getActors?actorId=1234", null); 
+
+		assertEquals(405, statusCode);
+
+		//TEST 2: Improper Formatting (actorID instead of actorId) (400)
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getActor?actorID=1234", null);
+		assertEquals(400, statusCode);
+
+		//TEST 3: Movie Does not exist (404)
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getActor?actorId=12344", null);
+		assertEquals(404, statusCode);
+
+		resetDatabase();
+
 		
 	}
 	
@@ -283,6 +298,136 @@ extends TestCase {
 
 		resetDatabase();
 	}
+
+	public void addRatingPass() throws JSONException {
+		//Create JSON Object
+		JSONObject addMovie = new JSONObject();
+		JSONObject addRatingRequest= new JSONObject();
+
+		//add values to fields
+		addMovie.put("name", "John Wick Chapter 1");
+		addMovie.put("movieId", "100");
+
+		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", addMovie);
+
+		//Checking status
+		assertEquals(200, statusCode);
+
+		//add values to fields
+		addRatingRequest.put("movieId", "100");
+		addRatingRequest.put("rating", "5.0");
+
+		//sending request
+		int statusCode1 = sendRequest("PUT", "http://localhost:8080/api/v1/addRating", addRatingRequest);
+		System.out.println("here is staus code for addRatingPass: " + statusCode1);
+
+		//checking status
+		assertEquals(200, statusCode1);
+	}
+
+	public void addRatingFail() throws JSONException {
+		
+
+	}
+
+	public void getMoviesWithRatingPass() throws JSONException{
+		// 1. create testS for add movie
+		// 2. create testS for add rating
+		// 3. create tests for get movies with rating 
+
+
+
+		JSONObject addMovie = new JSONObject();
+		addMovie.put("name", "despicable me");
+		addMovie.put("movieId", "1");
+
+		//send request
+		int statusCodeAddMovie = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", addMovie);
+
+		//test addMovie statusCode
+		assertEquals(200, statusCodeAddMovie);
+
+		//movie 2
+		JSONObject addMovie2 = new JSONObject();
+		addMovie2.put("name", "despicable me 2");
+		addMovie2.put("movieId", "2");
+
+		//send request
+		int statusCodeAddMovie2 = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", addMovie2);
+
+		//test addMovie3 statusCode
+		assertEquals(200, statusCodeAddMovie2);
+
+
+		//movie 3
+		JSONObject addMovie3 = new JSONObject();
+		addMovie3.put("name", "despicable me 3");
+		addMovie3.put("movieId", "3");
+
+		//send request
+		int statusCodeAddMovie3 = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", addMovie3);
+
+		//test addMovie statusCode
+		assertEquals(200, statusCodeAddMovie3);
+
+
+		//add Rating for Movie 1
+		JSONObject rateMovie1 = new JSONObject();
+
+		//add values to fields
+		rateMovie1.put("movieId", "1");
+		rateMovie1.put("rating", "5.0");
+
+		//sending request
+		int statusCodeRateMovie1 = sendRequest("PUT", "http://localhost:8080/api/v1/addRating", rateMovie1);
+
+		//checking status
+		assertEquals(200, statusCodeRateMovie1);
+
+
+		//add Rating for Movie 2
+		JSONObject rateMovie2 = new JSONObject();
+
+		//add values to fields
+		rateMovie2.put("movieId", "2");
+		rateMovie2.put("rating", "6.0");
+
+		//sending request
+		int statusCodeRateMovie2 = sendRequest("PUT", "http://localhost:8080/api/v1/addRating", rateMovie2);
+
+		//checking status
+		assertEquals(200, statusCodeRateMovie2);
+
+
+
+		//add Rating for Movie 3
+		JSONObject rateMovie3 = new JSONObject();
+
+		//add values to fields
+		rateMovie3.put("movieId", "3");
+		rateMovie3.put("rating", "7.0");
+
+		//sending request
+		int statusCodeRateMovie3 = sendRequest("PUT", "http://localhost:8080/api/v1/addRating", rateMovie3);
+
+		//checking status
+		assertEquals(200, statusCodeRateMovie3);
+
+
+
+
+		//getMoviesWithRating
+		//sending request
+		int statusCodeMovieRating = sendRequest("GET", "http://localhost:8080/api/v1/getMoviesWithRating?rating=5.0", null);
+		//checking status
+		assertEquals(200, statusCodeMovieRating);
+
+
+
+
+	}
+
+
 	
 	public void addRatingPass() {
 		
