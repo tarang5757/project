@@ -324,6 +324,7 @@ extends TestCase {
 		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getRaaaaating?movieId=1033", null); 
 		assertEquals(404, statusCode);
 		
+		resetDatabase();
 	}
 	
 }
