@@ -157,10 +157,8 @@ extends TestCase {
 	//Returns a 200 code for successfully adding a Movie to the database
 	public void getMoviePass() throws JSONException {
 		JSONObject putRequest = new JSONObject();
-		JSONObject getRequest = new JSONObject();
 		putRequest.put("name", "Click");
 		putRequest.put("movieId", "1234");
-		getRequest.put("movieId", "1234");
 
 		int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", putRequest);   //Add movie to database
 		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMovie?movieId=1234", null);		//Get movie that was added
