@@ -13,6 +13,8 @@ import org.neo4j.driver.v1.types.Path;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,17 +38,18 @@ public class computeBaconPath implements HttpHandler {
             try (OutputStream os = r.getResponseBody()) {
                 os.write(bytes);
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
     @Override
     public void handle(HttpExchange r) throws IOException {
         try {
-            if (r.getRequestMethod().equals("GET")) {
+            if (r.getRequestMethod().equalsIgnoreCase("GET")) {
                 handleGet(r);
-            }else{
-                sendResponse(r, 400, "Method not allowed");
+            } else {
+                sendResponse(r, 405, "Method not allowed");
             }
         } catch (Exception e) {
             sendResponse(r, 500, "INTERNAL SERVER ERROR");
@@ -54,22 +57,22 @@ public class computeBaconPath implements HttpHandler {
         }
     }
 
-    /*
-     * Status Codes:
-     * 200: Movie was successfully retrieved
-     * 400: Request body is improperly formatted or missing information
-     * 404: No movie with given movieId exists in database
-     * 500: Server Error
-     */
     private void handleGet(HttpExchange r) {
         try {
-            String body = Utils.convert(r.getRequestBody());
-            JSONObject deserialized = new JSONObject(body);
+            URI uri = r.getRequestURI();
+            String query = uri.getQuery();
+
+            if (query == null || query.isEmpty()) {
+                sendResponse(r, 400, "Request body improperly formatted or missing information");
+                return;
+            }
+
+            Map<String, String> queryParams = Utils.parseQuery(query);
             JSONObject jsonResponse = new JSONObject();
             String actorId;
 
-            if (deserialized.has("actorId")) {
-                actorId = deserialized.getString("actorId");
+            if (queryParams.containsKey("actorId")) {
+                actorId = queryParams.get("actorId");
             } else {
                 sendResponse(r, 400, "Request body improperly formatted or missing information");
                 return;
@@ -79,11 +82,11 @@ public class computeBaconPath implements HttpHandler {
                 try (Transaction tx = session.beginTransaction()) {
                     // Check if the actor and Kevin Bacon exist in the database
                     StatementResult result = tx.run("MATCH (m:Actor {actorId:$x}) RETURN m", parameters("x", actorId));
-                    StatementResult checkBacon = tx.run("MATCH (m:Actor {actorId:'nm0000102'}) RETURN m");
+                    StatementResult checkBacon = tx.run("MATCH (m:Actor {actorId:$x}) RETURN m", parameters("x", baconId));
 
                     if (result.hasNext() && checkBacon.hasNext()) {
                         ArrayList<String> baconPath = new ArrayList<>();
-                        if(actorId.equals(baconId)){
+                        if (actorId.equals(baconId)) {
                             baconPath.add(baconId);
                             jsonResponse.put("baconPath", baconPath);
                             sendResponse(r, 200, jsonResponse.toString());
@@ -114,29 +117,22 @@ public class computeBaconPath implements HttpHandler {
         }
     }
 
-    /**
-     * Retrieves the shortest path between the given actor and Kevin Bacon in the Neo4j database.
-     *
-     * @param tx the transaction within which the query is run
-     * @param actorId the ID of the actor for whom the path to Kevin Bacon is to be found
-     * @return a map containing the length of the path divided by 2 (as baconNumber) and the path itself (as baconPath)
-     */
-        private static Map<String, Object> getPath(Transaction tx, String actorId) {
-            // Execute a query to find the shortest path between the given actor and Kevin Bacon
-            StatementResult result = tx.run(
-                    "MATCH p=shortestPath((a:Actor {actorId: $actorId})-[*]-(b:Actor {actorId: $baconId})) " +
-                            "RETURN p AS baconPath",
-                    parameters("actorId", actorId, "baconId", "nm0000102")
-            );
+    private static Map<String, Object> getPath(Transaction tx, String actorId) {
+        // Execute a query to find the shortest path between the given actor and Kevin Bacon
+        StatementResult result = tx.run(
+                "MATCH p=shortestPath((a:Actor {actorId: $actorId})-[*]-(b:Actor {actorId: $baconId})) " +
+                        "RETURN p AS baconPath",
+                parameters("actorId", actorId, "baconId", "nm0000102")
+        );
 
-            // Get the list of records returned by the query
-            List<Record> records = result.list();
-            // Initialize a map to hold the results
-            Map<String, Object> recordMap = new HashMap<>();
-            if (!records.isEmpty()) {
-                Record record = records.get(0);
-                recordMap = record.asMap();
-            }
-            return recordMap;
+        // Get the list of records returned by the query
+        List<Record> records = result.list();
+        // Initialize a map to hold the results
+        Map<String, Object> recordMap = new HashMap<>();
+        if (!records.isEmpty()) {
+            Record record = records.get(0);
+            recordMap = record.asMap();
         }
+        return recordMap;
     }
+}
