@@ -50,6 +50,10 @@ extends TestCase {
 		//suite.addTest(new AppTest("addRatingFail"));
 		suite.addTest(new AppTest("getRatingPass"));
 		suite.addTest(new AppTest("getRatingFail"));
+		suite.addTest(new AppTest("computeBaconPathPass"));
+		suite.addTest(new AppTest("computeBaconPathFail"));
+
+
 
 		return suite;
 		//return new TestSuite(AppTest.class);
@@ -324,5 +328,94 @@ extends TestCase {
 		
 		resetDatabase();
 	}
-	
+
+	// computeBaconPath
+	public void computeBaconPathPass() throws JSONException {
+		// Populate DB with Kevin Bacon and another actor to test the shortest path
+		JSONObject kevinBaconRequest = new JSONObject();
+		kevinBaconRequest.put("name", "Kevin Bacon");
+		kevinBaconRequest.put("actorId", "nm0000102");
+
+		JSONObject otherActorRequest = new JSONObject();
+		otherActorRequest.put("name", "Tom Hanks");
+		otherActorRequest.put("actorId", "nm0000158");
+
+		JSONObject movieRequest = new JSONObject();
+		movieRequest.put("name", "Apollo 13");
+		movieRequest.put("movieId", "m00001");
+
+		JSONObject relationshipOne = new JSONObject();
+		relationshipOne.put("movieId", "m00001");
+		relationshipOne.put("actorId", "nm0000102");
+
+		JSONObject relationshipTwo = new JSONObject();
+		relationshipTwo.put("movieId", "m00001");
+		relationshipTwo.put("actorId", "nm0000158");
+
+		// Add Kevin Bacon and another actor
+		int dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", kevinBaconRequest);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", otherActorRequest);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", movieRequest);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipOne);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipTwo);
+
+		// Request to compute Bacon Path for Tom Hanks
+		int statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconPath?actorId=nm0000158", null);
+		assertEquals(200, statusCode);
+
+		// Request for Kevin Bacon himself
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconPath?actorId=nm0000102", null);
+		assertEquals(200, statusCode);
+
+		// Add another actor with multiple paths to Kevin Bacon
+		JSONObject secondActorRequest = new JSONObject();
+		secondActorRequest.put("name", "Kevin Spacey");
+		secondActorRequest.put("actorId", "nm0000228");
+
+		JSONObject secondMovieRequest = new JSONObject();
+		secondMovieRequest.put("name", "A Time to Kill");
+		secondMovieRequest.put("movieId", "m00002");
+
+		JSONObject relationshipThree = new JSONObject();
+		relationshipThree.put("movieId", "m00002");
+		relationshipThree.put("actorId", "nm0000102");
+
+		JSONObject relationshipFour = new JSONObject();
+		relationshipFour.put("movieId", "m00002");
+		relationshipFour.put("actorId", "nm0000228");
+
+		sendRequest("PUT", "http://localhost:8080/api/v1/addActor", secondActorRequest);
+		sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", secondMovieRequest);
+		sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipThree);
+		sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipFour);
+
+		// Request to compute Bacon Path for Kevin Spacey
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconPath?actorId=nm0000228", null);
+		assertEquals(200, statusCode);
+	}
+
+	public void computeBaconPathFail() throws JSONException {
+		// 400 BAD REQUEST - Improperly formatted request parameter
+		int statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconPath?actorID=nm0000158", null);
+		assertEquals(400, statusCode);
+
+		// 400 BAD REQUEST - Missing query parameter
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconPath", null);
+		assertEquals(400, statusCode);
+
+		// 404 NOT FOUND - Actor not in the database
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconPath?actorId=unknownActor", null);
+		assertEquals(404, statusCode);
+
+		// 404 NOT FOUND - Actor with no path to Kevin Bacon
+		JSONObject unrelatedActorRequest = new JSONObject();
+		unrelatedActorRequest.put("name", "Unrelated Actor");
+		unrelatedActorRequest.put("actorId", "nm9999999");
+
+		sendRequest("PUT", "http://localhost:8080/api/v1/addActor", unrelatedActorRequest);
+
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconPath?actorId=nm9999999", null);
+		assertEquals(404, statusCode);
+
+	}
 }
