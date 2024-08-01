@@ -43,6 +43,13 @@ extends TestCase {
 		suite.addTest(new AppTest("getActorFail"));
 		suite.addTest(new AppTest("getCoActorsPass"));
 		suite.addTest(new AppTest("getCoActorsFail"));
+		suite.addTest(new AppTest("getRatingPass"));
+		suite.addTest(new AppTest("getRatingFail"));
+		suite.addTest(new AppTest("addRatingPass"));
+		suite.addTest(new AppTest("addRatingFail"));
+		suite.addTest(new AppTest("computeBaconPathPass"));
+		suite.addTest(new AppTest("computeBaconPathFail"));
+		suite.addTest(new AppTest("getMoviesWithRatingPass")); 
 
 		return suite;
 		//return new TestSuite(AppTest.class);
@@ -428,14 +435,6 @@ extends TestCase {
 	}
 
 
-	
-	public void addRatingPass() {
-		
-	}
-	
-	public void addRatingFail() {
-		
-	}
 	
 	//Returns a 200 code for successful rating retrieval
 	public void getRatingPass() throws JSONException {

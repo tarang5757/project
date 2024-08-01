@@ -47,7 +47,8 @@ public class getRating implements HttpHandler{
 		try {
 			if (r.getRequestMethod().equals("GET")) {
 				handleGet(r);
-			}else{
+			}
+			else{
 				sendResponse(r, 405, "Method not allowed");
 			}
 		} catch (Exception e) {
