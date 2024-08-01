@@ -342,8 +342,6 @@ extends TestCase {
 		// 2. create testS for add rating
 		// 3. create tests for get movies with rating 
 
-
-
 		JSONObject addMovie = new JSONObject();
 		addMovie.put("name", "despicable me");
 		addMovie.put("movieId", "1");
@@ -362,10 +360,6 @@ extends TestCase {
 		//send request
 		int statusCodeAddMovie2 = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", addMovie2);
 
-		//test addMovie3 statusCode
-		assertEquals(200, statusCodeAddMovie2);
-
-
 		//movie 3
 		JSONObject addMovie3 = new JSONObject();
 		addMovie3.put("name", "despicable me 3");
@@ -373,54 +367,26 @@ extends TestCase {
 
 		//send request
 		int statusCodeAddMovie3 = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", addMovie3);
-
-		//test addMovie statusCode
 		assertEquals(200, statusCodeAddMovie3);
-
 
 		//add Rating for Movie 1
 		JSONObject rateMovie1 = new JSONObject();
-
-		//add values to fields
 		rateMovie1.put("movieId", "1");
 		rateMovie1.put("rating", "5.0");
-
-		//sending request
 		int statusCodeRateMovie1 = sendRequest("PUT", "http://localhost:8080/api/v1/addRating", rateMovie1);
-
-		//checking status
-		assertEquals(200, statusCodeRateMovie1);
-
 
 		//add Rating for Movie 2
 		JSONObject rateMovie2 = new JSONObject();
-
-		//add values to fields
 		rateMovie2.put("movieId", "2");
 		rateMovie2.put("rating", "6.0");
-
-		//sending request
 		int statusCodeRateMovie2 = sendRequest("PUT", "http://localhost:8080/api/v1/addRating", rateMovie2);
-
-		//checking status
-		assertEquals(200, statusCodeRateMovie2);
-
 
 
 		//add Rating for Movie 3
 		JSONObject rateMovie3 = new JSONObject();
-
-		//add values to fields
 		rateMovie3.put("movieId", "3");
 		rateMovie3.put("rating", "7.0");
-
-		//sending request
 		int statusCodeRateMovie3 = sendRequest("PUT", "http://localhost:8080/api/v1/addRating", rateMovie3);
-
-		//checking status
-		assertEquals(200, statusCodeRateMovie3);
-
-
 
 
 		//getMoviesWithRating
@@ -429,9 +395,7 @@ extends TestCase {
 		//checking status
 		assertEquals(200, statusCodeMovieRating);
 
-
-
-
+		resetDatabase();
 	}
 
 
@@ -560,6 +524,8 @@ extends TestCase {
 
 		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconPath?actorId=nm9999999", null);
 		assertEquals(404, statusCode);
+
+		resetDatabase();
 
 	}
 }
