@@ -62,7 +62,7 @@ public class hasRelationship implements HttpHandler {
                 try (Session session = this.driver.session()) {
                 	try(Transaction tx = session.beginTransaction()){
                 		StatementResult resultMovie = tx.run("MATCH (m:Movie {movieId:$x}) RETURN m", parameters("x", movieId));
-                		StatementResult resultActor = tx.run("MATCH (a:Actor {actorID:$x}) RETURN a", parameters("x", actorId));
+                		StatementResult resultActor = tx.run("MATCH (a:Actor {actorId:$x}) RETURN a", parameters("x", actorId));
                 		if(!resultMovie.hasNext() || !resultActor.hasNext()) {
                 			sendResponse(exchange, 404, "NOT FOUND");
                 		}
@@ -76,7 +76,7 @@ public class hasRelationship implements HttpHandler {
 
             try (Session session = this.driver.session()) {
                 StatementResult result = session.run(
-                    "MATCH (a:Actor {actorID:$actorId})-[r:ACTED_IN]->(m:Movie {movieId:$movieId}) RETURN r",
+                    "MATCH (a:Actor {actorId:$actorId})-[r:ACTED_IN]->(m:Movie {movieId:$movieId}) RETURN r",
                     parameters("actorId", actorId, "movieId", movieId)
                 );
                 boolean hasRelationship = result.hasNext();
