@@ -61,19 +61,19 @@ public class addRelationship implements HttpHandler {
                 int result = addActedInRelationship(actorId, movieId);
 
                 if (result == 0) {
-                    sendResponse(exchange, 200, "OK");
+                    sendResponse(exchange, 200, "OK"); //200 success
                 } else if (result == 1) {
-                    sendResponse(exchange, 404, "NOT FOUND");
+                    sendResponse(exchange, 404, "NOT FOUND"); //404 if actor or movie doesnt exist in db
                 } else if (result == 2) {
-                    sendResponse(exchange, 400, "BAD REQUEST");
+                    sendResponse(exchange, 400, "BAD REQUEST"); //400 improper formatting
                 }
             } else {
-                sendResponse(exchange, 400, "BAD REQUEST");
+                sendResponse(exchange, 400, "BAD REQUEST"); //400 improper formatting
             }
         } catch (JSONException e) {
-            sendResponse(exchange, 400, "BAD REQUEST");
+            sendResponse(exchange, 400, "BAD REQUEST"); //400 improper formatting
         } catch (Exception e) {
-            sendResponse(exchange, 500, "INTERNAL SERVER ERROR");
+            sendResponse(exchange, 500, "INTERNAL SERVER ERROR"); //500 unsuccessful request
         }
     }
 
@@ -84,7 +84,7 @@ public class addRelationship implements HttpHandler {
                 StatementResult movieResult = tx.run("MATCH (m:Movie {movieId:$movieId}) RETURN m", parameters("movieId", movieId));
 
                 if (!actorResult.hasNext() || !movieResult.hasNext()) {
-                    return 1;
+                    return 1; 
                 }
                 StatementResult relationshipResult = tx.run(
                         "MATCH (a:Actor {actorId:$actorId})-[r:ACTED_IN]->(m:Movie {movieId:$movieId}) RETURN r",
