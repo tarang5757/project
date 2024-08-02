@@ -50,6 +50,10 @@ extends TestCase {
 		suite.addTest(new AppTest("computeBaconPathPass"));
 		suite.addTest(new AppTest("computeBaconPathFail"));
 		suite.addTest(new AppTest("getMoviesWithRatingPass")); 
+		suite.addTest(new AppTest("addRelationshipPass"));
+		suite.addTest(new AppTest("addRelationshipFail"));
+		suite.addTest(new AppTest("hasRelationshipPass"));
+		suite.addTest(new AppTest("hasRelationshipFail"));
 
 		return suite;
 		//return new TestSuite(AppTest.class);
@@ -527,5 +531,204 @@ extends TestCase {
 
 		resetDatabase();
 
+	}
+	public void addRelationshipPass() throws JSONException {
+	    // 200 Success
+	    JSONObject actor = new JSONObject();
+	    JSONObject movie = new JSONObject();
+	    JSONObject relationship = new JSONObject();
+	    
+	    actor.put("name", "J.K. Simmons");
+	    actor.put("actorId", "4897837");
+	    int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", actor);
+	    assertEquals(200, statusCode);
+
+	    movie.put("name", "Whiplash");
+	    movie.put("movieId", "8748347");
+	    statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", movie);
+	    assertEquals(200, statusCode); 
+
+	    relationship.put("actorId", "4897837");
+	    relationship.put("movieId", "8748347");
+	    statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationship);
+	    assertEquals(200, statusCode);
+	    resetDatabase();
+	}
+
+	public void addRelationshipFail() throws JSONException {
+		// 404 Actor does not exist in DB
+	    JSONObject movieOneRequest = new JSONObject();
+	    JSONObject relationshipOneRequest = new JSONObject();
+	    movieOneRequest.put("name", "Se7en");
+	    movieOneRequest.put("movieId", "654323232323");
+	    sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", movieOneRequest);
+	    relationshipOneRequest.put("actorId", "234563232232");
+	    relationshipOneRequest.put("movieId", "654323232323");
+	    int statusCodeOne = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipOneRequest);
+	    assertEquals(404, statusCodeOne);
+	    
+	    // 404 Movie does not exist in DB
+	    JSONObject relationshipTwoRequest = new JSONObject();
+	    JSONObject ActorTwoRequest = new JSONObject();
+	    ActorTwoRequest.put("name", "Hugh Jackman");
+	    ActorTwoRequest.put("actorId", "923893");
+	    sendRequest("PUT", "http://localhost:8080/api/v1/addActor", ActorTwoRequest);
+	    relationshipTwoRequest.put("actorId", "923893");
+	    relationshipTwoRequest.put("movieId", "387593");
+	    int statusCodeTwo = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipTwoRequest);
+	    assertEquals(404, statusCodeTwo);
+	    
+	    //400 Missing Info
+	    JSONObject relationshipThreeRequest = new JSONObject();
+	    JSONObject ActorThreeRequest = new JSONObject();
+	    JSONObject movieThreeRequest = new JSONObject();
+	    ActorThreeRequest.put("name", "Cilian Murphy");
+	    ActorThreeRequest.put("actorId", "3944394394");
+	    sendRequest("PUT", "http://localhost:8080/api/v1/addActor", ActorThreeRequest);
+	    movieThreeRequest.put("name", "Batman Begins");
+	    movieThreeRequest.put("movieId", "9283945784");
+	    sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", movieThreeRequest);
+	    relationshipThreeRequest.put("movieId", "9283945784");
+	    int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipThreeRequest);
+	    assertEquals(400, statusCode);
+	    resetDatabase();
+	}
+	
+	public void hasRelationshipPass() throws JSONException{
+        //200 Success
+        JSONObject actor = new JSONObject();
+        JSONObject movie = new JSONObject();
+        JSONObject relationship = new JSONObject();
+        JSONObject hasRelationship = new JSONObject();
+
+        actor.put("name", "Jack Black");
+        actor.put("actorId", "4897878737");
+        int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", actor);
+        assertEquals(200, statusCode);
+
+        movie.put("name", "Kung-Fu Panda");
+        movie.put("movieId", "874833253647");
+        statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", movie);
+        assertEquals(200, statusCode); 
+
+        relationship.put("actorId", "4897878737");
+        relationship.put("movieId", "874833253647");
+        statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationship);
+        assertEquals(200, statusCode); 
+        
+        hasRelationship.put("actorId", "4897878737");
+        hasRelationship.put("movieId", "874833253647");
+        statusCode = sendRequest("GET", "http://localhost:8080/api/v1/hasRelationship?actorId=4897878737&movieId=874833253647", null);
+        assertEquals(200, statusCode); 
+        resetDatabase();
+    }
+	
+	public void hasRelationshipFail() throws JSONException{
+		//400 Improper formatting for Actor 
+        JSONObject actor = new JSONObject();
+        JSONObject movie = new JSONObject();
+        JSONObject relationship = new JSONObject();
+        JSONObject hasRelationship = new JSONObject();
+		
+        actor.put("name", "Keanu Reeves");
+        actor.put("actorId", "435");
+        int statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", actor);
+        assertEquals(200, statusCode);
+
+        movie.put("name", "John Wick");
+        movie.put("movieId", "8747");
+        statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", movie);
+        assertEquals(200, statusCode); 
+
+        relationship.put("actorId", "435");
+        relationship.put("movieId", "8747");
+        statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationship);
+        assertEquals(200, statusCode); 
+        
+        hasRelationship.put("actorId", "435");
+        hasRelationship.put("movieId", "8747");
+        statusCode = sendRequest("GET", "http://localhost:8080/api/v1/hasRelationship?actrId=435&movieId=8747", null);
+        assertEquals(400, statusCode); 
+        
+        //400 Improper formatting for Movie
+        JSONObject actor2 = new JSONObject();
+        JSONObject movie2 = new JSONObject();
+        JSONObject relationship2 = new JSONObject();
+        JSONObject hasRelationship2 = new JSONObject();
+		
+        actor2.put("name", "Christian Bale");
+        actor2.put("actorId", "4346");
+        statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", actor2);
+        assertEquals(200, statusCode);
+
+        movie2.put("name", "American Psycho");
+        movie2.put("movieId", "8567");
+        statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", movie2);
+        assertEquals(200, statusCode); 
+
+        relationship2.put("actorId", "4346");
+        relationship2.put("movieId", "8567");
+        statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationship2);
+        assertEquals(200, statusCode); 
+        
+        hasRelationship2.put("actorId", "4346");
+        hasRelationship2.put("movieId", "8567");
+        statusCode = sendRequest("GET", "http://localhost:8080/api/v1/hasRelationship?actorId=4346&moviId=8567", null);
+        assertEquals(400, statusCode); 
+        
+        
+		//404 Movie does not exist in DB
+        JSONObject actorOne = new JSONObject();
+        JSONObject movieOne = new JSONObject();
+        JSONObject relationshipOne = new JSONObject();
+        JSONObject hasRelationshipOne = new JSONObject();
+		
+        actorOne.put("name", "Willem Dafoe");
+        actorOne.put("actorId", "382738");
+        statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", actorOne);
+        assertEquals(200, statusCode);
+        
+        movieOne.put("name", "Spider-Man");
+        movieOne.put("movieId", "382248");
+        statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", movieOne);
+        assertEquals(200, statusCode);
+        
+        relationshipOne.put("actorId", "382738");
+        relationshipOne.put("movieId", "382248");
+        statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipOne);
+        assertEquals(200, statusCode);
+        
+        hasRelationshipOne.put("actorId", "382738");
+        hasRelationshipOne.put("movieId", "382248");
+        statusCode = sendRequest("GET", "http://localhost:8080/api/v1/hasRelationship?actorId=382738&movieId=874833253647", null);
+        assertEquals(404, statusCode);
+        
+        
+        //404 Actor does not exist in DB
+        JSONObject actorTwo = new JSONObject();
+        JSONObject movieTwo = new JSONObject();
+        JSONObject relationshipTwo = new JSONObject();
+        JSONObject hasRelationshipTwo = new JSONObject();
+        
+        actorTwo.put("name", "Ryan Reynolds");
+        actorTwo.put("actorId", "3828");
+        int statusCodeTwo = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", actorTwo);
+        assertEquals(200, statusCodeTwo);
+        
+        movieTwo.put("name", "Green Lantern");
+        movieTwo.put("movieId", "3868");
+        statusCodeTwo = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", movieTwo);
+        assertEquals(200, statusCodeTwo);
+        
+        relationshipTwo.put("actorId", "3828");
+        relationshipTwo.put("movieId", "3868");
+        statusCodeTwo = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipTwo);
+        assertEquals(200, statusCodeTwo);
+        
+        hasRelationshipTwo.put("actorId", "3828");
+        hasRelationshipTwo.put("movieId", "3868");
+        statusCode = sendRequest("GET", "http://localhost:8080/api/v1/hasRelationship?actorId=383338&movieId=3868", null);
+        assertEquals(404, statusCode);
+		resetDatabase();
 	}
 }
