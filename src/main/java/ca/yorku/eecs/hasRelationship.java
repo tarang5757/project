@@ -2,6 +2,8 @@ package ca.yorku.eecs;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
+import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,57 +48,66 @@ public class hasRelationship implements HttpHandler {
             e.printStackTrace();
         }
     }
-
+    //For GET requests with queries in the URL
     public void handleGet(HttpExchange exchange) throws IOException {
         String response = null;
         String body = Utils.convert(exchange.getRequestBody());
         int statusCode = 0;
         String movieId = "", actorId = "";
-
-        try {
-            JSONObject deserialized = new JSONObject(body);
-
-            if (deserialized.has("movieId") && deserialized.has("actorId")) {
-                movieId = deserialized.getString("movieId");
-                actorId = deserialized.getString("actorId");
-                try (Session session = this.driver.session()) {
-                	try(Transaction tx = session.beginTransaction()){
-                		StatementResult resultMovie = tx.run("MATCH (m:Movie {movieId:$x}) RETURN m", parameters("x", movieId));
-                		StatementResult resultActor = tx.run("MATCH (a:Actor {actorID:$x}) RETURN a", parameters("x", actorId));
-                		if(!resultMovie.hasNext() || !resultActor.hasNext()) {
-                			sendResponse(exchange, 404, "NOT FOUND");
-                		}
-                	}
-                }
-            } else {
-                statusCode = 400;
-                exchange.sendResponseHeaders(statusCode, -1);
-                return;
-            }
-
-            try (Session session = this.driver.session()) {
-                StatementResult result = session.run(
-                    "MATCH (a:Actor {actorID:$actorId})-[r:ACTED_IN]->(m:Movie {movieId:$movieId}) RETURN r",
-                    parameters("actorId", actorId, "movieId", movieId)
-                );
-                boolean hasRelationship = result.hasNext();
-
-                JSONObject jsonResponse = new JSONObject();
-                jsonResponse.put("actorId", actorId);
-                jsonResponse.put("movieId", movieId);
-                jsonResponse.put("hasRelationship", hasRelationship);
-
-                response = jsonResponse.toString();
-                statusCode = 200;
-            } catch (Exception e) {
-                e.printStackTrace();
-                statusCode = 500;
-            }
-
-        } catch (JSONException e) {
-            statusCode = 400;
+        if(body.isEmpty()) {
+			URI uri = exchange.getRequestURI();
+			String query = uri.getQuery();
+			Map<String, String> queryParams = Utils.parseQuery(query);
+			movieId = queryParams.get("movieId");
+			actorId = queryParams.get("actorId");
+			if(actorId == null || movieId == null || actorId.equals("") || movieId.equals("")) {
+				sendResponse(exchange, 400, "BAD REQUEST"); //400 Improper formatting
+			}
+			
         }
+        else { //For GET requests with queries in the body
+        	try {
+				JSONObject deserialized = new JSONObject(body);
+				if (deserialized.has("movieId") && deserialized.has("actorId")) {
+					movieId = deserialized.getString("movieId");
+	                actorId = deserialized.getString("actorId");
+				}
+				else {
+					sendResponse(exchange, 400, "BAD REQUEST"); //400 Improper formatting
+				}
+                
+			} 
+        	catch (JSONException e) {
+        		statusCode = 400; //400 Improper formatting
+			}
+        }
+        try (Session session = this.driver.session()) {
+        	try(Transaction tx = session.beginTransaction()){
+        		StatementResult resultMovie = tx.run("MATCH (m:Movie {movieId:$x}) RETURN m", parameters("x", movieId));
+        		StatementResult resultActor = tx.run("MATCH (a:Actor {actorId:$x}) RETURN a", parameters("x", actorId));
+        		if(!resultMovie.hasNext() || !resultActor.hasNext()) {
+        			sendResponse(exchange, 404, "NOT FOUND"); //404 actor or movie doesnt exist in the DB
+        		}
+        	}
+        }
+        try (Session session = this.driver.session()) {
+            StatementResult result = session.run(
+                "MATCH (a:Actor {actorId:$actorId})-[r:ACTED_IN]->(m:Movie {movieId:$movieId}) RETURN r",
+                parameters("actorId", actorId, "movieId", movieId)
+            );
+            boolean hasRelationship = result.hasNext();
 
+            JSONObject jsonResponse = new JSONObject();
+            jsonResponse.put("actorId", actorId);
+            jsonResponse.put("movieId", movieId);
+            jsonResponse.put("hasRelationship", hasRelationship);
+
+            response = jsonResponse.toString();
+            statusCode = 200; //200 success
+        } catch (Exception e) {
+            e.printStackTrace();
+            statusCode = 500;
+        }
         exchange.sendResponseHeaders(statusCode, response != null ? response.length() : -1);
 
         if (response != null) {
