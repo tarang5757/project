@@ -117,6 +117,14 @@ public class computeBaconPath implements HttpHandler {
         }
     }
 
+    /**
+     * Retrieves the shortest path between the given actor and Kevin Bacon in the Neo4j database.
+     *
+     * @param tx the transaction within which the query is run
+     * @param actorId the ID of the actor for whom the path to Kevin Bacon is to be found
+     * @return a map containing the length of the path divided by 2 (as baconNumber) and the path itself (as baconPath)
+     */
+
     private static Map<String, Object> getPath(Transaction tx, String actorId) {
         // Execute a query to find the shortest path between the given actor and Kevin Bacon
         StatementResult result = tx.run(

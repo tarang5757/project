@@ -2,13 +2,12 @@ package ca.yorku.eecs;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.neo4j.driver.v1.*;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-
+import java.net.URI;
+import java.util.Map;
 
 import static org.neo4j.driver.v1.Values.parameters;
 
@@ -36,10 +35,10 @@ public class computeBaconNumber implements HttpHandler {
     @Override
     public void handle(HttpExchange r) throws IOException {
         try {
-            if (r.getRequestMethod().equals("GET")) {
+            if (r.getRequestMethod().equalsIgnoreCase("GET")) {
                 handleGet(r);
             } else {
-                sendResponse(r, 400, "Method not allowed");
+                sendResponse(r, 405, "Method not allowed");
             }
         } catch (Exception e) {
             sendResponse(r, 500, "INTERNAL SERVER ERROR");
@@ -56,13 +55,14 @@ public class computeBaconNumber implements HttpHandler {
      */
     private void handleGet(HttpExchange r) {
         try {
-            String body = Utils.convert(r.getRequestBody());
-            JSONObject deserialized = new JSONObject(body);
+            URI uri = r.getRequestURI();
+            String query = uri.getQuery();
+            Map<String, String> queryParams = Utils.parseQuery(query);
             JSONObject jsonResponse = new JSONObject();
             String actorId;
 
-            if (deserialized.has("actorId")) {
-                actorId = deserialized.getString("actorId");
+            if (queryParams.containsKey("actorId")) {
+                actorId = queryParams.get("actorId");
             } else {
                 sendResponse(r, 400, "Request body improperly formatted or missing information");
                 return;
@@ -72,11 +72,11 @@ public class computeBaconNumber implements HttpHandler {
                 try (Transaction tx = session.beginTransaction()) {
                     // Check if the actor and Kevin Bacon exist in the database
                     StatementResult result = tx.run("MATCH (m:Actor {actorId:$x}) RETURN m", parameters("x", actorId));
-                    StatementResult checkBacon = tx.run("MATCH (m:Actor {actorId:'nm0000102'}) RETURN m");
+                    StatementResult checkBacon = tx.run("MATCH (m:Actor {actorId:$x}) RETURN m", parameters("x", baconId));
 
                     if (result.hasNext() && checkBacon.hasNext()) {
-                        ArrayList<String> baconPath = new ArrayList<>();
-                        if (actorId.equals(baconId)) { // Kevin Bacon's actor ID
+                        // if actor is Kevin Bacon then bacon number is 0
+                        if (actorId.equals(baconId)) {
                             jsonResponse.put("baconNumber", 0);
                             sendResponse(r, 200, jsonResponse.toString());
                             return;
@@ -89,6 +89,7 @@ public class computeBaconNumber implements HttpHandler {
                                 parameters("actorId", actorId, "baconId", "nm0000102")
                         );
 
+                        // result
                         if (baconResult.hasNext()) {
                             Record record = baconResult.next();
                             int baconNumber = record.get("baconNumber").asInt();
@@ -107,5 +108,4 @@ public class computeBaconNumber implements HttpHandler {
             sendResponse(r, 500, "Internal server error");
         }
     }
-
 }
