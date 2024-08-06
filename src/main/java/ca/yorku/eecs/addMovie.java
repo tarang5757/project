@@ -54,9 +54,7 @@ public class addMovie implements HttpHandler{
 	 */
 	public void handlePut(HttpExchange r) throws IOException, JSONException {
 		// Take parameters from request body
-		String body = Utils.convert(r.getRequestBody());
-		JSONObject deserialized = new JSONObject(body);
-		int statusCode = 0;
+		JSONObject deserialized = Utils.getParameters(r);
 		
 		/* Check that necessary parameters were given
 		 * Does NOT accept URL query parameters unlike GET requests
@@ -82,8 +80,7 @@ public class addMovie implements HttpHandler{
                 sendResponse(r, 500, "Internal Server Error");
             }
         } else {
-            statusCode = 400;
-            sendResponse(r, statusCode, "Bad Request: Missing movieId or name");
+            sendResponse(r, 400, "Bad Request: Missing movieId or name");
         }
 	}
 }

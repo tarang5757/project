@@ -56,7 +56,7 @@ public class getRating implements HttpHandler{
 			e.printStackTrace();
 		}
 	}
-	
+
 	/*
 	 * Status Codes:
 	 * 200: Rating was successfully retrieved
@@ -68,29 +68,13 @@ public class getRating implements HttpHandler{
 		try {
 			String movieId = null;
 			String response = null;
-			String body = Utils.convert(r.getRequestBody());
 			//Can accept query parameters sent in URL or request body. Request body will take precedence.
-			if(!body.isEmpty()) {
-				//Request Body
-				JSONObject deserialized = new JSONObject(body);
-				if (deserialized.has("movieId"))
-					movieId = deserialized.getString("movieId");
-				else {
-					sendResponse(r, 400, "Request body improperly formatted or missing information"); 
-					return;
-				}
-			}
+			JSONObject deserialized = Utils.getParameters(r);
+			if (deserialized.has("movieId"))
+				movieId = deserialized.getString("movieId");
 			else {
-				//If no body is given, look for query parameters 
-				URI uri = r.getRequestURI();
-				String query = uri.getQuery();
-				Map<String, String> queryParams = Utils.parseQuery(query);
-				movieId = queryParams.get("movieId");
-
-				if (movieId == null || movieId.isEmpty()) {
-					sendResponse(r, 400, "Request body improperly formatted or missing information");
-					return;
-				}
+				sendResponse(r, 400, "Request body improperly formatted or missing information"); 
+				return;
 			}
 
 			//Initialize Transaction

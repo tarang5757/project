@@ -51,24 +51,11 @@ public class hasRelationship implements HttpHandler {
     //For GET requests with queries in the URL
     public void handleGet(HttpExchange exchange) throws IOException {
         String response = null;
-        String body = Utils.convert(exchange.getRequestBody());
         int statusCode = 0;
         String movieId = "", actorId = "";
-<<<<<<< HEAD
-        if(body.isEmpty()) {
-			URI uri = exchange.getRequestURI();
-			String query = uri.getQuery();
-			Map<String, String> queryParams = Utils.parseQuery(query);
-			movieId = queryParams.get("movieId");
-			actorId = queryParams.get("actorId");
-			if(actorId == null || movieId == null || actorId.equals("") || movieId.equals("")) {
-				sendResponse(exchange, 400, "BAD REQUEST"); //400 Improper formatting
-			}
-			
-=======
 
         try {
-            JSONObject deserialized = new JSONObject(body);
+            JSONObject deserialized = Utils.getParameters(exchange);
 
             if (deserialized.has("movieId") && deserialized.has("actorId")) {
                 movieId = deserialized.getString("movieId");
@@ -109,24 +96,8 @@ public class hasRelationship implements HttpHandler {
 
         } catch (JSONException e) {
             statusCode = 400;
->>>>>>> b2787dc (add)
         }
-        else { //For GET requests with queries in the body
-        	try {
-				JSONObject deserialized = new JSONObject(body);
-				if (deserialized.has("movieId") && deserialized.has("actorId")) {
-					movieId = deserialized.getString("movieId");
-	                actorId = deserialized.getString("actorId");
-				}
-				else {
-					sendResponse(exchange, 400, "BAD REQUEST"); //400 Improper formatting
-				}
-                
-			} 
-        	catch (JSONException e) {
-        		statusCode = 400; //400 Improper formatting
-			}
-        }
+        
         try (Session session = this.driver.session()) {
         	try(Transaction tx = session.beginTransaction()){
         		StatementResult resultMovie = tx.run("MATCH (m:Movie {movieId:$x}) RETURN m", parameters("x", movieId));

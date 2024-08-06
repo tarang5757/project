@@ -32,20 +32,20 @@ public class getCoActors implements HttpHandler{
 	public getCoActors(Neo4j database) {
 		this.driver = database.getDriver();
 	}
-	
+
 	private void sendResponse(HttpExchange r, int statusCode, String response) {
-        try {
-            byte[] bytes = response.getBytes();
-            r.getResponseHeaders().set("Content-Type", "application/json");
-            r.sendResponseHeaders(statusCode, bytes.length);
-            try (OutputStream os = r.getResponseBody()) {
-                os.write(bytes);
-            }
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
-    }
-	
+		try {
+			byte[] bytes = response.getBytes();
+			r.getResponseHeaders().set("Content-Type", "application/json");
+			r.sendResponseHeaders(statusCode, bytes.length);
+			try (OutputStream os = r.getResponseBody()) {
+				os.write(bytes);
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override
 	public void handle(HttpExchange r) throws IOException {
 		try {
@@ -71,31 +71,15 @@ public class getCoActors implements HttpHandler{
 		try {
 			String actorId = null;
 			String response = null;
-			String body = Utils.convert(r.getRequestBody());
 			//Can accept query parameters sent in URL or request body. Request body will take precedence.
-			if(!body.isEmpty()) {
-				//Request Body
-				JSONObject deserialized = new JSONObject(body);
-				if (deserialized.has("actorId"))
-					actorId = deserialized.getString("actorId");
-				else {
-					sendResponse(r, 400, "Request body improperly formatted or missing information"); 
-					return;
-				}
-			}
+			JSONObject deserialized = Utils.getParameters(r);
+			if (deserialized.has("actorId"))
+				actorId = deserialized.getString("actorId");
 			else {
-				//Query Parameters 
-				URI uri = r.getRequestURI();
-				String query = uri.getQuery();
-				Map<String, String> queryParams = Utils.parseQuery(query);
-				actorId = queryParams.get("actorId");
-
-				if (actorId == null || actorId.isEmpty()) {
-					sendResponse(r, 400, "Request body improperly formatted or missing information");
-					return;
-				}
+				sendResponse(r, 400, "Request body improperly formatted or missing information"); 
+				return;
 			}
-			
+
 			//Make query and populate list of coActors
 			Session session = this.driver.session();
 			Transaction tx = session.beginTransaction();
@@ -104,23 +88,23 @@ public class getCoActors implements HttpHandler{
 			if(result.hasNext()) {
 				Record record = result.next();
 				Node actorNode = record.get("a").asNode();
-				
+
 				List<String> actors = new ArrayList<>();
 				// Run query for any actor who has an ACTED_IN relationship with given actor's movies
 				StatementResult coStarsResult = tx.run("MATCH(a:Actor {actorId:$x})-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(coActor:Actor) "
-													+ "RETURN coActor.actorId", parameters("x", actorId));
+						+ "RETURN coActor.actorId", parameters("x", actorId));
 				while(coStarsResult.hasNext()) {
 					Record actorRecord = coStarsResult.next();
 					String coActorId = actorRecord.get("coActor.actorId").asString();
 					actors.add(coActorId);
 				}
-				
+
 				//Build Response Body
 				JSONObject jsonResponse = new JSONObject();
 				jsonResponse.put("actors:", new JSONArray(actors));
 				response = jsonResponse.toString();
 				sendResponse(r, 200, response);
-				
+
 				tx.success();
 			} else { //No Actor found with given actorId
 				sendResponse(r, 404, "No Actor found with given ID");
@@ -132,8 +116,8 @@ public class getCoActors implements HttpHandler{
 		} catch (Exception e) {
 			sendResponse(r, 500, "INTERNAL SERVER ERROR");
 		}
-		
-		
+
+
 	}
-	
+
 }

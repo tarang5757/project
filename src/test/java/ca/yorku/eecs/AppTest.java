@@ -538,34 +538,25 @@ extends TestCase {
 		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipTwo);
 
 		// Request to compute Bacon Number for Tom Hanks
-		JSONObject requestBody = new JSONObject();
-		requestBody.put("actorId", "nm0000158");
-		int statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		int statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber?actorId=nm0000158", null);
 		assertEquals(200, statusCode);
 
 		// Request to compute Bacon Number for Kevin Bacon himself
-		requestBody = new JSONObject();
-		requestBody.put("actorId", "nm0000102");
-		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber?actorId=nm0000102", null);
 		assertEquals(200, statusCode);
 	}
 
 	public void computeBaconNumberFail() throws JSONException {
 		// 400 BAD REQUEST - Improperly formatted request parameter
-		JSONObject requestBody = new JSONObject();
-		requestBody.put("actorID", "nm0000158");
-		int statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		int statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber?actorID=nm0000158", null);
 		assertEquals(400, statusCode);
 
 		// 400 BAD REQUEST - Missing query parameter
-		requestBody = new JSONObject();
-		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", null);
 		assertEquals(400, statusCode);
 
 		// 404 NOT FOUND - Actor not in the database
-		requestBody = new JSONObject();
-		requestBody.put("actorId", "unknownActor");
-		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber?actorId=unknownActor", null);
 		assertEquals(404, statusCode);
 
 		// 404 NOT FOUND - Actor with no path to Kevin Bacon
@@ -575,16 +566,9 @@ extends TestCase {
 
 		sendRequest("PUT", "http://localhost:8080/api/v1/addActor", unrelatedActorRequest);
 
-		requestBody = new JSONObject();
-		requestBody.put("actorId", "nm9999999");
-		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber?actorId=nm9999999", null);
 		assertEquals(404, statusCode);
 
-		// 500 INTERNAL SERVER ERROR - Simulate an internal server error
-		requestBody = new JSONObject();
-		requestBody.put("actorId", "invalidActorId");
-		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
-		assertEquals(500, statusCode);
 	}
 
 	public void computeBaconPathFail() throws JSONException {

@@ -50,8 +50,7 @@ public class getActor implements HttpHandler {
      */
     private void handleGet(HttpExchange exchange) throws IOException, JSONException {
         String response = null;
-        String body = Utils.convert(exchange.getRequestBody());
-        JSONObject deserialized = new JSONObject(body);
+        JSONObject deserialized = Utils.getParameters(exchange);
         int statusCode = 0;
         String actorId = "";
 

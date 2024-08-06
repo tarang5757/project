@@ -53,8 +53,7 @@ public class addRating implements HttpHandler {
      * 500: Server Error
      */
     public void handlePut(HttpExchange r) throws IOException, JSONException {
-        String body = Utils.convert(r.getRequestBody());
-        JSONObject deserialized = new JSONObject(body);
+        JSONObject deserialized = Utils.getParameters(r);
         int statusCode = 0;
 
         if (deserialized.has("movieId") && deserialized.has("rating")) {

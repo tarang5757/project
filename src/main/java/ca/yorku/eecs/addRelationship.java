@@ -48,8 +48,7 @@ public class addRelationship implements HttpHandler {
 
     private void handlePutRequest(HttpExchange exchange) throws IOException {
         try {
-            String body = Utils.convert(exchange.getRequestBody());
-            JSONObject deserialized = new JSONObject(body);
+            JSONObject deserialized = Utils.getParameters(exchange);
 
             String actorId = "";
             String movieId = "";
