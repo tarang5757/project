@@ -49,6 +49,8 @@ extends TestCase {
 		suite.addTest(new AppTest("addRatingFail"));
 		suite.addTest(new AppTest("computeBaconPathPass"));
 		suite.addTest(new AppTest("computeBaconPathFail"));
+		suite.addTest(new AppTest("computeBaconNumberPass"));
+		suite.addTest(new AppTest("computeBaconNumberFail"));
 		suite.addTest(new AppTest("getMoviesWithRatingPass")); 
 		suite.addTest(new AppTest("addRelationshipPass"));
 		suite.addTest(new AppTest("addRelationshipFail"));
@@ -504,6 +506,84 @@ extends TestCase {
 		// Request to compute Bacon Path for Kevin Spacey
 		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconPath?actorId=nm0000228", null);
 		assertEquals(200, statusCode);
+	}
+	public void computeBaconNumberPass() throws JSONException {
+		// Populate DB with Kevin Bacon and another actor to test the Bacon number
+		JSONObject kevinBaconRequest = new JSONObject();
+		kevinBaconRequest.put("name", "Kevin Bacon");
+		kevinBaconRequest.put("actorId", "nm0000102");
+
+		JSONObject otherActorRequest = new JSONObject();
+		otherActorRequest.put("name", "Tom Hanks");
+		otherActorRequest.put("actorId", "nm0000158");
+
+		JSONObject movieRequest = new JSONObject();
+		movieRequest.put("name", "Apollo 13");
+		movieRequest.put("movieId", "m00001");
+
+		JSONObject relationshipOne = new JSONObject();
+		relationshipOne.put("movieId", "m00001");
+		relationshipOne.put("actorId", "nm0000102");
+
+		JSONObject relationshipTwo = new JSONObject();
+		relationshipTwo.put("movieId", "m00001");
+		relationshipTwo.put("actorId", "nm0000158");
+
+		// Add Kevin Bacon and another actor
+		int dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", kevinBaconRequest);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addActor", otherActorRequest);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addMovie", movieRequest);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipOne);
+		dummyCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRelationship", relationshipTwo);
+
+		// Request to compute Bacon Number for Tom Hanks
+		JSONObject requestBody = new JSONObject();
+		requestBody.put("actorId", "nm0000158");
+		int statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		assertEquals(200, statusCode);
+
+		// Request to compute Bacon Number for Kevin Bacon himself
+		requestBody = new JSONObject();
+		requestBody.put("actorId", "nm0000102");
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		assertEquals(200, statusCode);
+	}
+
+	public void computeBaconNumberFail() throws JSONException {
+		// 400 BAD REQUEST - Improperly formatted request parameter
+		JSONObject requestBody = new JSONObject();
+		requestBody.put("actorID", "nm0000158");
+		int statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		assertEquals(400, statusCode);
+
+		// 400 BAD REQUEST - Missing query parameter
+		requestBody = new JSONObject();
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		assertEquals(400, statusCode);
+
+		// 404 NOT FOUND - Actor not in the database
+		requestBody = new JSONObject();
+		requestBody.put("actorId", "unknownActor");
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		assertEquals(404, statusCode);
+
+		// 404 NOT FOUND - Actor with no path to Kevin Bacon
+		JSONObject unrelatedActorRequest = new JSONObject();
+		unrelatedActorRequest.put("name", "Unrelated Actor");
+		unrelatedActorRequest.put("actorId", "nm9999999");
+
+		sendRequest("PUT", "http://localhost:8080/api/v1/addActor", unrelatedActorRequest);
+
+		requestBody = new JSONObject();
+		requestBody.put("actorId", "nm9999999");
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		assertEquals(404, statusCode);
+
+		// 500 INTERNAL SERVER ERROR - Simulate an internal server error
+		requestBody = new JSONObject();
+		requestBody.put("actorId", "invalidActorId");
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/computeBaconNumber", requestBody);
+		assertEquals(500, statusCode);
 	}
 
 	public void computeBaconPathFail() throws JSONException {
