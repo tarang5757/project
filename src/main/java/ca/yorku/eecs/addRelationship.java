@@ -37,7 +37,7 @@ public class addRelationship implements HttpHandler {
             if ("PUT".equals(exchange.getRequestMethod())) {
                 handlePutRequest(exchange);
             } else {
-                sendResponse(exchange, 400, "BAD REQUEST");
+                sendResponse(exchange, 405, "BAD REQUEST");
             }
         } catch(IOException e) {
             sendResponse(exchange, 500, "INTERNAL SERVER ERROR");

@@ -13,7 +13,7 @@ import static org.neo4j.driver.v1.Values.parameters;
 
 public class computeBaconNumber implements HttpHandler {
     private final Driver driver;
-    private String baconId;
+    private final String baconId = "nm0000102";
 
     public computeBaconNumber(Neo4j database) {
         this.driver = database.getDriver();
@@ -70,13 +70,10 @@ public class computeBaconNumber implements HttpHandler {
                 try (Transaction tx = session.beginTransaction()) {
                     // Check if the actor and Kevin Bacon exist in the database
                     StatementResult result = tx.run("MATCH (m:Actor {actorId:$x}) RETURN m", parameters("x", actorId));
-                    StatementResult checkBacon = tx.run("MATCH (m:Actor {name:\"Kevin Bacon\"}) RETURN m");
+                    StatementResult checkBacon = tx.run("MATCH (m:Actor {actorId:$x}) RETURN m", parameters("x", baconId));
                     
                     if (result.hasNext() && checkBacon.hasNext()) {
                         // if actor is Kevin Bacon then bacon number is 0
-                    	Record baconRecord = checkBacon.next();
-                        String baconId = baconRecord.get("m").get("actorId").asString();
-                        
                         if (actorId.equals(baconId)) {
                             jsonResponse.put("baconNumber", 0);
                             sendResponse(r, 200, jsonResponse.toString());
@@ -87,7 +84,7 @@ public class computeBaconNumber implements HttpHandler {
                         StatementResult baconResult = tx.run(
                                 "MATCH p=shortestPath((a:Actor {actorId: $actorId})-[*]-(b:Actor {actorId: $baconId})) " +
                                         "RETURN length(p)/2 as baconNumber",
-                                parameters("actorId", actorId, "baconId", baconId)
+                                parameters("actorId", actorId, "baconId", "nm0000102")
                         );
 
                         // result

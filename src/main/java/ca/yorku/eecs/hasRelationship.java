@@ -41,7 +41,7 @@ public class hasRelationship implements HttpHandler {
             if (exchange.getRequestMethod().equals("GET")) {
                 handleGet(exchange);
             } else {
-            	sendResponse(exchange, 400, "BAD REQUEST");
+            	sendResponse(exchange, 405, "BAD REQUEST");
             }
         } catch (Exception e) {
         	sendResponse(exchange, 500, "INTERNAL SERVER ERROR");

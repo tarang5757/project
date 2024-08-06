@@ -38,7 +38,7 @@ public class addRating implements HttpHandler {
             if (r.getRequestMethod().equals("PUT")) {
                 handlePut(r);
             } else {
-                sendResponse(r, 400, "Method Not Allowed");
+                sendResponse(r, 405, "Method Not Allowed");
             }
         } catch (Exception e) {
             sendResponse(r, 500, "Internal Server Error");
@@ -69,7 +69,7 @@ public class addRating implements HttpHandler {
                                 parameters("x", movieId, "y", rating));
                         sendResponse(r, 200, "Rating was successfully added");
                     } else {
-                        sendResponse(r, 400, "Movie ID does not exist");
+                        sendResponse(r, 404, "Movie ID does not exist");
                     }
                     return null;
                 });
