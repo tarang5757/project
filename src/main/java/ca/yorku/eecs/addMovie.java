@@ -39,7 +39,7 @@ public class addMovie implements HttpHandler{
                 handlePut(r);
             } else {
                 sendResponse(r, 405, "Method Not Allowed");
-            }
+            }  
         } catch (Exception e) {
             sendResponse(r, 500, "Internal Server Error");
             e.printStackTrace();

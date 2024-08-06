@@ -54,6 +54,7 @@ public class hasRelationship implements HttpHandler {
         String body = Utils.convert(exchange.getRequestBody());
         int statusCode = 0;
         String movieId = "", actorId = "";
+<<<<<<< HEAD
         if(body.isEmpty()) {
 			URI uri = exchange.getRequestURI();
 			String query = uri.getQuery();
@@ -64,6 +65,51 @@ public class hasRelationship implements HttpHandler {
 				sendResponse(exchange, 400, "BAD REQUEST"); //400 Improper formatting
 			}
 			
+=======
+
+        try {
+            JSONObject deserialized = new JSONObject(body);
+
+            if (deserialized.has("movieId") && deserialized.has("actorId")) {
+                movieId = deserialized.getString("movieId");
+                actorId = deserialized.getString("actorId");
+                try (Session session = this.driver.session()) {
+                	try(Transaction tx = session.beginTransaction()){
+                		StatementResult resultMovie = tx.run("MATCH (m:Movie {movieId:$x}) RETURN m", parameters("x", movieId));
+                		StatementResult resultActor = tx.run("MATCH (a:Actor {actorId:$x}) RETURN a", parameters("x", actorId));
+                		if(!resultMovie.hasNext() || !resultActor.hasNext()) {
+                			sendResponse(exchange, 404, "NOT FOUND");
+                		}
+                	}
+                }
+            } else {
+                statusCode = 400;
+                exchange.sendResponseHeaders(statusCode, -1);
+                return;
+            }
+
+            try (Session session = this.driver.session()) {
+                StatementResult result = session.run(
+                    "MATCH (a:Actor {actorId:$actorId})-[r:ACTED_IN]->(m:Movie {movieId:$movieId}) RETURN r",
+                    parameters("actorId", actorId, "movieId", movieId)
+                );
+                boolean hasRelationship = result.hasNext();
+
+                JSONObject jsonResponse = new JSONObject();
+                jsonResponse.put("actorId", actorId);
+                jsonResponse.put("movieId", movieId);
+                jsonResponse.put("hasRelationship", hasRelationship);
+
+                response = jsonResponse.toString();
+                statusCode = 200;
+            } catch (Exception e) {
+                e.printStackTrace();
+                statusCode = 500;
+            }
+
+        } catch (JSONException e) {
+            statusCode = 400;
+>>>>>>> b2787dc (add)
         }
         else { //For GET requests with queries in the body
         	try {

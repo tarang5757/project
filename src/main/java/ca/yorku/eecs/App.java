@@ -29,6 +29,7 @@ public class App {
         server.createContext("/api/v1/computeBaconNumber", new computeBaconNumber(database));
         server.createContext("/api/v1/getRating", new getRating(database));
         server.createContext("/api/v1/getMoviesWithRating", new getMoviesWithRating(database));
+        server.createContext("/api/v1/hasRelationship", new hasRelationship(database));
         
         server.start();
         System.out.printf("Server started on port %d...\n", PORT);
