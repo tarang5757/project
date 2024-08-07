@@ -37,7 +37,7 @@ public class addRelationship implements HttpHandler {
             if ("PUT".equals(exchange.getRequestMethod())) {
                 handlePutRequest(exchange);
             } else {
-                sendResponse(exchange, 400, "BAD REQUEST");
+                sendResponse(exchange, 405, "BAD REQUEST");
             }
         } catch(IOException e) {
             sendResponse(exchange, 500, "INTERNAL SERVER ERROR");
@@ -48,8 +48,7 @@ public class addRelationship implements HttpHandler {
 
     private void handlePutRequest(HttpExchange exchange) throws IOException {
         try {
-            String body = Utils.convert(exchange.getRequestBody());
-            JSONObject deserialized = new JSONObject(body);
+            JSONObject deserialized = Utils.getParameters(exchange);
 
             String actorId = "";
             String movieId = "";

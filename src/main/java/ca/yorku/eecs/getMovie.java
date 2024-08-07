@@ -70,30 +70,16 @@ public class getMovie implements HttpHandler{
 		try {
 			String movieId = null;
 			String response = null;
-			String body = Utils.convert(r.getRequestBody());
 			//Can accept query parameters sent in URL or request body. Request body will take precedence.
-			if(!body.isEmpty()) {
-				//Request Body
-				JSONObject deserialized = new JSONObject(body);
-				if (deserialized.has("movieId"))
-					movieId = deserialized.getString("movieId");
-				else {
-					sendResponse(r, 400, "Request body improperly formatted or missing information"); 
-					return;
-				}
-			}
-			else {
-				//If no body is given, look for query parameters 
-				URI uri = r.getRequestURI();
-				String query = uri.getQuery();
-				Map<String, String> queryParams = Utils.parseQuery(query);
-				movieId = queryParams.get("movieId");
 
-				if (movieId == null || movieId.isEmpty()) {
-					sendResponse(r, 400, "Request body improperly formatted or missing information");
-					return;
-				}
+			JSONObject deserialized = Utils.getParameters(r);
+			if (deserialized.has("movieId"))
+				movieId = deserialized.getString("movieId");
+			else {
+				sendResponse(r, 400, "Request body improperly formatted or missing information"); 
+				return;
 			}
+
 
 			//Initialize Transaction
 			Session session = this.driver.session();
@@ -107,7 +93,7 @@ public class getMovie implements HttpHandler{
 
 				List<String> actors = new ArrayList<>();
 				StatementResult actorsResult = tx.run("MATCH (m:Movie {movieId:$x})<-[:ACTED_IN]-(a:Actor) RETURN a.actorId",parameters("x", movieId));
-				
+
 				//Add any actorId with a ACTED_IN relationship with given movie
 				while(actorsResult.hasNext()) {
 					Record actorRecord = actorsResult.next();

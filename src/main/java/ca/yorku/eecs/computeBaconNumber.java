@@ -55,14 +55,12 @@ public class computeBaconNumber implements HttpHandler {
      */
     private void handleGet(HttpExchange r) {
         try {
-            URI uri = r.getRequestURI();
-            String query = uri.getQuery();
-            Map<String, String> queryParams = Utils.parseQuery(query);
             JSONObject jsonResponse = new JSONObject();
+            JSONObject queryParams = Utils.getParameters(r);
             String actorId;
 
-            if (queryParams.containsKey("actorId")) {
-                actorId = queryParams.get("actorId");
+            if (queryParams.has("actorId")) {
+                actorId = queryParams.getString("actorId");
             } else {
                 sendResponse(r, 400, "Request body improperly formatted or missing information");
                 return;
@@ -73,7 +71,7 @@ public class computeBaconNumber implements HttpHandler {
                     // Check if the actor and Kevin Bacon exist in the database
                     StatementResult result = tx.run("MATCH (m:Actor {actorId:$x}) RETURN m", parameters("x", actorId));
                     StatementResult checkBacon = tx.run("MATCH (m:Actor {actorId:$x}) RETURN m", parameters("x", baconId));
-
+                    
                     if (result.hasNext() && checkBacon.hasNext()) {
                         // if actor is Kevin Bacon then bacon number is 0
                         if (actorId.equals(baconId)) {

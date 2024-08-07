@@ -59,20 +59,12 @@ public class computeBaconPath implements HttpHandler {
 
     private void handleGet(HttpExchange r) {
         try {
-            URI uri = r.getRequestURI();
-            String query = uri.getQuery();
-
-            if (query == null || query.isEmpty()) {
-                sendResponse(r, 400, "Request body improperly formatted or missing information");
-                return;
-            }
-
-            Map<String, String> queryParams = Utils.parseQuery(query);
+        	JSONObject queryParams = Utils.getParameters(r);
             JSONObject jsonResponse = new JSONObject();
             String actorId;
 
-            if (queryParams.containsKey("actorId")) {
-                actorId = queryParams.get("actorId");
+            if (queryParams.has("actorId")) {
+                actorId = queryParams.getString("actorId");
             } else {
                 sendResponse(r, 400, "Request body improperly formatted or missing information");
                 return;

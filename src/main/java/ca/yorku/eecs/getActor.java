@@ -50,8 +50,7 @@ public class getActor implements HttpHandler {
      */
     private void handleGet(HttpExchange exchange) throws IOException, JSONException {
         String response = null;
-        String body = Utils.convert(exchange.getRequestBody());
-        JSONObject deserialized = new JSONObject(body);
+        JSONObject deserialized = Utils.getParameters(exchange);
         int statusCode = 0;
         String actorId = "";
 
@@ -65,7 +64,7 @@ public class getActor implements HttpHandler {
 
         try (Session session = this.driver.session()) {
             try (Transaction tx = session.beginTransaction()) {
-                StatementResult result = tx.run("MATCH (a:Actor {id:$x}) RETURN a", parameters("x", actorId));
+                StatementResult result = tx.run("MATCH (a:Actor {actorId:$x}) RETURN a", parameters("x", actorId));
                 if (result.hasNext()) {
                     Record record = result.next();
                     Node actorNode = record.get("a").asNode();
@@ -73,12 +72,12 @@ public class getActor implements HttpHandler {
 
                     List<String> movies = new ArrayList<>();
                     StatementResult moviesResult = tx.run(
-                            "MATCH (a:Actor {id:$x})-[:ACTED_IN]->(m:Movie) RETURN m.id",
+                            "MATCH (a:Actor {actorId:$x})-[:ACTED_IN]->(m:Movie) RETURN m.movieId",
                             parameters("x", actorId));
 
                     while (moviesResult.hasNext()) {
                         Record movieRecord = moviesResult.next();
-                        String movieId = movieRecord.get("m.id").asString();
+                        String movieId = movieRecord.get("m.movieId").asString();
                         movies.add(movieId);
                     }
 

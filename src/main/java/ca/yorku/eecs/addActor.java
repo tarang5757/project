@@ -49,8 +49,7 @@ public class addActor implements HttpHandler {
 
     private void handlePutRequest(HttpExchange exchange) throws IOException {
         try {
-            String body = Utils.convert(exchange.getRequestBody());
-            JSONObject deserialized = new JSONObject(body);
+            JSONObject deserialized = Utils.getParameters(exchange);
 
             if (deserialized.has("name") && deserialized.has("actorId")) {
                 String name = deserialized.getString("name");

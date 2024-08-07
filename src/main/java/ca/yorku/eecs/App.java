@@ -24,7 +24,7 @@ public class App {
         server.createContext("/api/v1/hasRelationship", new hasRelationship(database));
         server.createContext("/api/v1/addRating", new addRating(database));
         server.createContext("/api/v1/getCoActors", new getCoActors(database));
-        server.createContext("/api/v1/getActor", new getCoActors(database));
+        server.createContext("/api/v1/getActor", new getActor(database));
         server.createContext("/api/v1/computeBaconPath", new computeBaconPath(database));
         server.createContext("/api/v1/computeBaconNumber", new computeBaconNumber(database));
         server.createContext("/api/v1/getRating", new getRating(database));
