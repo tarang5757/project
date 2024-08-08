@@ -59,7 +59,10 @@ public class addRating implements HttpHandler {
         if (deserialized.has("movieId") && deserialized.has("rating")) {
             String movieId = deserialized.getString("movieId");
             double rating = deserialized.getDouble("rating");
-
+            if(rating > 10 || rating < 0) {
+            	sendResponse(r, 400, "Bad Request: Rating must be from 0 to 10");
+            	return;
+            }
             try (Session session = driver.session()) {
                 session.writeTransaction(tx -> {
                     boolean movieExists = tx.run("MATCH (m:Movie {movieId: $x}) RETURN m", parameters("x", movieId))

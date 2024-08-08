@@ -340,8 +340,25 @@ extends TestCase {
 	}
 
 	public void addRatingFail() throws JSONException {
+		int statusCode = 0;
+		//Movie with ID 100 already exists in DB
 		
-
+		//TEST 1: Wrong method type (405)
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/addRating?movieId=100&rating=6.0", null);
+		assertEquals(405,statusCode);
+		
+		//TEST 2: Rating out of bounds (400)
+		statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRating?movieId=100&rating=24", null);	
+		assertEquals(400,statusCode);
+		
+		//TEST 3: Improper Formatting/Missing Info
+		statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRating?mddddovieId=100&rating=6.0", null);		
+		assertEquals(400,statusCode);
+		
+		//TEST 3: Movie Does not exist
+		statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/addRating?movieId=1234567&rating=6.0", null);
+		assertEquals(404,statusCode);
+		
 	}
 
 	public void getMoviesWithRatingPass() throws JSONException{
