@@ -28,10 +28,22 @@ import static org.neo4j.driver.v1.Values.parameters;
 public class getMovie implements HttpHandler{
 	private final Driver driver;
 
+	/**
+     * Constructor to initialize the getMovie handler with a Neo4j database.
+     *
+     * @param database An instance of the Neo4j class that provides the database driver.
+     */
 	public getMovie(Neo4j database) {
 		this.driver = database.getDriver();
 	}
 
+	/**
+     * Sends an HTTP response to the client.
+     *
+     * @param exchange   The HttpExchange object that contains the request and response.
+     * @param statusCode The HTTP status code to be sent.
+     * @param response   The response body to be sent as a string.
+     */
 	private void sendResponse(HttpExchange r, int statusCode, String response) {
 		try {
 			byte[] bytes = response.getBytes();
@@ -45,6 +57,12 @@ public class getMovie implements HttpHandler{
 		}
 	}
 
+	/**
+     * Handles incoming HTTP requests. Only GET requests are allowed; other methods
+     * will result in a 405 Method Not Allowed response.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     */
 	@Override
 	public void handle(HttpExchange r) throws IOException {
 		try {
@@ -59,13 +77,13 @@ public class getMovie implements HttpHandler{
 		}
 	}
 
-	/*
-	 * Status Codes:
-	 * 200: Movie was successfully retrieved
-	 * 400: Request body is improperly formatted or missing information
-	 * 404: No movie with given movieId exists in database
-	 * 500: Server Error
-	 */
+	/**
+     * Handles the logic for a GET request, retrieving a movie from the Neo4j database.
+     * The request must contain a "movieId" field.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     * @throws IOException If an I/O error occurs.
+     */
 	private void handleGet(HttpExchange r) {
 		try {
 			String movieId = null;

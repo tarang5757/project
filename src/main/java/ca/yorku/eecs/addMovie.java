@@ -16,10 +16,22 @@ import static org.neo4j.driver.v1.Values.parameters;
 public class addMovie implements HttpHandler{
 	private final Driver driver;
 	
+	/**
+     * Constructor to initialize the addMovie handler with a Neo4j database.
+     *
+     * @param database An instance of the Neo4j class that provides the database driver.
+     */
 	public addMovie(Neo4j database) {
         this.driver = database.getDriver();
     }
 	
+	/**
+     * Sends an HTTP response to the client.
+     *
+     * @param exchange   The HttpExchange object that contains the request and response.
+     * @param statusCode The HTTP status code to be sent.
+     * @param response   The response body to be sent as a string.
+     */
 	private void sendResponse(HttpExchange exchange, int statusCode, String response) {
         try {
             byte[] bytes = response.getBytes();
@@ -32,6 +44,12 @@ public class addMovie implements HttpHandler{
         }
     }
 	
+	/**
+     * Handles incoming HTTP requests. Only PUT requests are allowed; other methods
+     * will result in a 405 Method Not Allowed response.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     */
 	@Override
 	public void handle(HttpExchange r) throws IOException {
         try {
@@ -46,12 +64,14 @@ public class addMovie implements HttpHandler{
         }
     }
 	
-	/*
-	 * Status Codes:
-	 * 200: Movie was successfully added
-	 * 400: Movie ID already exists in database, or request body is improperly formatted or missing information
-	 * 500: Server Error
-	 */
+	/**
+     * Handles the logic for a PUT request, adding a movie to the Neo4j database.
+     * The request must contain "name" and "movieId" fields.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     * @throws IOException If an I/O error occurs.
+     * @throws JSONException If a JSON error occurs.
+     */
 	public void handlePut(HttpExchange r) throws IOException, JSONException {
 		// Take parameters from request body
 		JSONObject deserialized = Utils.getParameters(r);

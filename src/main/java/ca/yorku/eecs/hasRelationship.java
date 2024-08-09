@@ -19,10 +19,22 @@ public class hasRelationship implements HttpHandler {
 
     private final Driver driver;
 
+    /**
+     * Constructor to initialize the hasRelationship handler with a Neo4j database.
+     *
+     * @param database An instance of the Neo4j class that provides the database driver.
+     */
     public hasRelationship(Neo4j database) {
         this.driver = database.getDriver();
     }
 
+    /**
+     * Sends an HTTP response to the client.
+     *
+     * @param exchange   The HttpExchange object that contains the request and response.
+     * @param statusCode The HTTP status code to be sent.
+     * @param response   The response body to be sent as a string.
+     */
     private void sendResponse(HttpExchange exchange, int statusCode, String response) {
         try {
             byte[] bytes = response.getBytes();
@@ -36,6 +48,12 @@ public class hasRelationship implements HttpHandler {
         }
     }
 
+    /**
+     * Handles incoming HTTP requests. Only GET requests are allowed; other methods
+     * will result in a 405 Method Not Allowed response.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     */
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {
@@ -50,6 +68,13 @@ public class hasRelationship implements HttpHandler {
         }
     }
 
+    /**
+     * Handles the logic for a GET request, determining if there is a ACTED_IN relationship between an actor and movie.
+     * The request must contain "movieId" and "actorId" fields.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     * @throws IOException If an I/O error occurs.
+     */
     public void handleGet(HttpExchange exchange) throws IOException {
         String response = null;
         int statusCode = 200;

@@ -22,11 +22,21 @@ import static org.neo4j.driver.v1.Values.parameters;
 public class getActor implements HttpHandler {
     private final Driver driver;
 
-    // initialize the database
+    /**
+     * Constructor to initialize the getActor handler with a Neo4j database.
+     *
+     * @param database An instance of the Neo4j class that provides the database driver.
+     */
     public getActor(Neo4j database) {
         this.driver = database.getDriver();
     }
 
+    /**
+     * Handles incoming HTTP requests. Only GET requests are allowed; other methods
+     * will result in a 405 Method Not Allowed response.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     */
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {
@@ -41,12 +51,13 @@ public class getActor implements HttpHandler {
         }
     }
 
-    /*
-     * Status Codes:
-     * 200: Actor was successfully retrieved
-     * 400: Request body is improperly formatted or missing information
-     * 404: No actor with given actorId exists in database
-     * 500: Server Error
+    /**
+     * Handles the logic for a GET request, retrieving an actor from the Neo4j database.
+     * The request must contain an "actorId" field.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     * @throws IOException If an I/O error occurs.
+     * @throws JSONException If a JSON errr occurs.
      */
     private void handleGet(HttpExchange exchange) throws IOException, JSONException {
         String response = null;
@@ -106,6 +117,13 @@ public class getActor implements HttpHandler {
         }
     }
 
+    /**
+     * Sends an HTTP response to the client.
+     *
+     * @param exchange   The HttpExchange object that contains the request and response.
+     * @param statusCode The HTTP status code to be sent (e.g., 200 for OK, 400 for Bad Request).
+     * @param response   The response body to be sent as a string.
+     */
     private void sendResponse(HttpExchange exchange, int statusCode, byte[] response) throws IOException {
         if (response == null) {
             exchange.sendResponseHeaders(statusCode, -1);

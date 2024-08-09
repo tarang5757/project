@@ -15,10 +15,22 @@ public class computeBaconNumber implements HttpHandler {
     private final Driver driver;
     private final String baconId = "nm0000102";
 
+    /**
+     * Constructor to initialize the computeBaconNumber handler with a Neo4j database.
+     *
+     * @param database An instance of the Neo4j class that provides the database driver.
+     */
     public computeBaconNumber(Neo4j database) {
         this.driver = database.getDriver();
     }
 
+    /**
+     * Sends an HTTP response to the client.
+     *
+     * @param exchange   The HttpExchange object that contains the request and response.
+     * @param statusCode The HTTP status code to be sent.
+     * @param response   The response body to be sent as a string.
+     */
     private void sendResponse(HttpExchange r, int statusCode, String response) {
         try {
             byte[] bytes = response.getBytes();
@@ -32,6 +44,12 @@ public class computeBaconNumber implements HttpHandler {
         }
     }
 
+    /**
+     * Handles incoming HTTP requests. Only GET requests are allowed; other methods
+     * will result in a 405 Method Not Allowed response.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     */
     @Override
     public void handle(HttpExchange r) throws IOException {
         try {
@@ -46,12 +64,11 @@ public class computeBaconNumber implements HttpHandler {
         }
     }
 
-    /*
-     * Status Codes:
-     * 200: Movie was successfully retrieved
-     * 400: Request body is improperly formatted or missing information
-     * 404: No movie with given movieId exists in database
-     * 500: Server Error
+    /**
+     * Handles the logic for a GET request, computing the baconNumber from a given actor in the database.
+     * The request must contain an "actorId" field.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
      */
     private void handleGet(HttpExchange r) {
         try {

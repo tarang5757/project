@@ -26,10 +26,22 @@ public class computeBaconPath implements HttpHandler {
     private final Driver driver;
     private final String baconId = "nm0000102";
 
+    /**
+     * Constructor to initialize the computeBaconPath handler with a Neo4j database.
+     *
+     * @param database An instance of the Neo4j class that provides the database driver.
+     */
     public computeBaconPath(Neo4j database) {
         this.driver = database.getDriver();
     }
 
+    /**
+     * Sends an HTTP response to the client.
+     *
+     * @param exchange   The HttpExchange object that contains the request and response.
+     * @param statusCode The HTTP status code to be sent (e.g., 200 for OK, 400 for Bad Request).
+     * @param response   The response body to be sent as a string.
+     */
     private void sendResponse(HttpExchange r, int statusCode, String response) {
         try {
             byte[] bytes = response.getBytes();
@@ -43,6 +55,12 @@ public class computeBaconPath implements HttpHandler {
         }
     }
 
+    /**
+     * Handles incoming HTTP requests. Only GET requests are allowed; other methods
+     * will result in a 405 Method Not Allowed response.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     */
     @Override
     public void handle(HttpExchange r) throws IOException {
         try {
@@ -57,6 +75,12 @@ public class computeBaconPath implements HttpHandler {
         }
     }
 
+    /**
+     * Handles the logic for a GET request, computing the bacon path from a given actor in the database.
+     * The request must contain an "actorId" field.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     */
     private void handleGet(HttpExchange r) {
         try {
         	JSONObject queryParams = Utils.getParameters(r);
