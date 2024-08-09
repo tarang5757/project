@@ -25,10 +25,22 @@ import com.sun.net.httpserver.HttpHandler;
 public class getRating implements HttpHandler{
 	private final Driver driver;
 
+	/**
+     * Constructor to initialize the getRating handler with a Neo4j database.
+     *
+     * @param database An instance of the Neo4j class that provides the database driver.
+     */
 	public getRating(Neo4j database) {
 		this.driver = database.getDriver();
 	}
 
+	/**
+     * Sends an HTTP response to the client.
+     *
+     * @param exchange   The HttpExchange object that contains the request and response.
+     * @param statusCode The HTTP status code to be sent.
+     * @param response   The response body to be sent as a string.
+     */
 	private void sendResponse(HttpExchange r, int statusCode, String response) {
 		try {
 			byte[] bytes = response.getBytes();
@@ -42,6 +54,12 @@ public class getRating implements HttpHandler{
 		}
 	}
 
+	/**
+     * Handles incoming HTTP requests. Only GET requests are allowed; other methods
+     * will result in a 405 Method Not Allowed response.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     */
 	@Override
 	public void handle(HttpExchange r) throws IOException {
 		try {
@@ -57,13 +75,12 @@ public class getRating implements HttpHandler{
 		}
 	}
 
-	/*
-	 * Status Codes:
-	 * 200: Rating was successfully retrieved
-	 * 400: Request body is improperly formatted or missing information
-	 * 404: No movie with given movieId exists in database, or movie has no rating
-	 * 500: Server Error
-	 */
+	/**
+     * Handles the logic for a GET request, attempting to retrie a rating from a movie in the Neo4j database.
+     * The request must contain a "movieId" field.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     */
 	private void handleGet(HttpExchange r) {
 		try {
 			String movieId = null;

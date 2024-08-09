@@ -14,11 +14,22 @@ import org.neo4j.driver.v1.*;
 public class addActor implements HttpHandler {
     private final Driver driver;
 
-    // this constructor initializes database
+    /**
+     * Constructor to initialize the addActor handler with a Neo4j database.
+     *
+     * @param database An instance of the Neo4j class that provides the database driver.
+     */
     public addActor(Neo4j database) {
         this.driver = database.getDriver();
     }
 
+    /**
+     * Sends an HTTP response to the client.
+     *
+     * @param exchange   The HttpExchange object that contains the request and response.
+     * @param statusCode The HTTP status code to be sent (e.g., 200 for OK, 400 for Bad Request).
+     * @param response   The response body to be sent as a string.
+     */
     private void sendResponse(HttpExchange exchange, int statusCode, String response) {
         try {
             byte[] bytes = response.getBytes();
@@ -32,6 +43,13 @@ public class addActor implements HttpHandler {
         }
     }
 
+    /**
+     * Handles incoming HTTP requests. Only PUT requests are allowed; other methods
+     * will result in a 405 Method Not Allowed response.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     */
+    @Override
     public void handle(HttpExchange exchange) {
         try {
             if (exchange.getRequestMethod().equals("PUT")) {
@@ -47,6 +65,13 @@ public class addActor implements HttpHandler {
         }
     }
 
+    /**
+     * Handles the logic for a PUT request, adding an actor to the Neo4j database.
+     * The request must contain "name" and "actorId" fields.
+     *
+     * @param exchange The HttpExchange object that contains the request and response.
+     * @throws IOException If an I/O error occurs.
+     */
     private void handlePutRequest(HttpExchange exchange) throws IOException {
         try {
             JSONObject deserialized = Utils.getParameters(exchange);
