@@ -40,6 +40,7 @@ extends TestCase {
 		suite.addTest(new AppTest("getMoviePass"));
 		suite.addTest(new AppTest("getMovieFail"));
 		suite.addTest(new AppTest("addActorPass"));
+		suite.addTest(new AppTest("addActorFail"));
 		suite.addTest(new AppTest("getActorPass"));
 		suite.addTest(new AppTest("getActorFail"));
 		suite.addTest(new AppTest("getCoActorsPass"));
@@ -53,6 +54,7 @@ extends TestCase {
 		suite.addTest(new AppTest("computeBaconNumberPass"));
 		suite.addTest(new AppTest("computeBaconNumberFail"));
 		suite.addTest(new AppTest("getMoviesWithRatingPass")); 
+		suite.addTest(new AppTest("getMoviesWithRatingFail")); 
 		suite.addTest(new AppTest("addRelationshipPass"));
 		suite.addTest(new AppTest("addRelationshipFail"));
 		suite.addTest(new AppTest("hasRelationshipPass"));
@@ -419,9 +421,26 @@ extends TestCase {
 		//checking status
 		assertEquals(200, statusCodeMovieRating);
 
-		resetDatabase();
 	}
 
+	public void getMoviesWithRatingFail() {
+		int statusCode = 0;
+		//Movie with ID 100 already exists in DB
+		
+		//TEST 1: Wrong method type (405)
+		statusCode = sendRequest("PUT", "http://localhost:8080/api/v1/getMoviesWithRatingFail?rating=6.0", null);
+		assertEquals(405,statusCode);
+		
+		//TEST 3: Improper Formatting/Missing Info
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMoviesWithRatingFail?rattttting=6.0", null);		
+		assertEquals(400,statusCode);
+		
+		//TEST 3: Movie with applicable rating does not exist (using DB from previous test)
+		statusCode = sendRequest("GET", "http://localhost:8080/api/v1/getMoviesWithRatingFail?rating=10", null);
+		assertEquals(404,statusCode);
+		
+		resetDatabase();
+	}
 
 	
 	//Returns a 200 code for successful rating retrieval
